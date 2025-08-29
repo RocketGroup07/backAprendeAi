@@ -1,5 +1,7 @@
 package br.com.aprendeai.model;
 
+import java.time.LocalDateTime;
+
 import br.com.aprendeai.enums.PapelEnum;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -8,36 +10,31 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 import lombok.Data;
 
 @Entity
 @Data
+@Table(name = "usuarios")
 public class Usuario {
 	
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
 	
-	@Column(nullable = false)
+	@Column(name = "nome", nullable = false)
 	private String nome;
 	
-	@Column(nullable = false, unique = true)
+	@Column(name = "email", nullable = false, unique = true)
 	private String email;
 	
-	@Column(nullable = false)
+	@Column(name = "senha", nullable = false)
 	private String senha;
 	
-	@Column(nullable = false)
+	@Column(name = "papel", nullable = false)
 	@Enumerated(EnumType.STRING)
 	private PapelEnum papel;
-
-	public Usuario(Long id, String nome, String email, String senha, PapelEnum papel) {
-		super();
-		this.id = id;
-		this.nome = nome;
-		this.email = email;
-		this.senha = senha;
-		this.papel = papel;
-	}
-
+	 
+	@Column(name = "criado_em")
+	private LocalDateTime criadoEm;
 }
