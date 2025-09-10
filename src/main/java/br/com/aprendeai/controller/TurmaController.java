@@ -24,11 +24,7 @@ public class TurmaController {
     @Autowired
     private UsuarioRepository usuarioRepository;
 
-<<<<<<< HEAD
-    @PostMapping("/") // -> admin
-=======
     @PostMapping("/")
->>>>>>> fea1a89e86074f10fcc24d458b2f131ca2cc3541
     public ResponseEntity<?> criarTurma(@RequestBody Turma turma) {
         try {
             if (turma.getNome() == null || turma.getNome().isEmpty() || turma.getProfessor() == null) {
@@ -47,11 +43,7 @@ public class TurmaController {
         }
     }
 
-<<<<<<< HEAD
-    @GetMapping("/") // admin/user
-=======
     @GetMapping("/")
->>>>>>> fea1a89e86074f10fcc24d458b2f131ca2cc3541
     public ResponseEntity<?> listarTurmas() {
         try {
             List<Turma> turmas = turmaRepository.findAll();
@@ -68,11 +60,7 @@ public class TurmaController {
         }
     }
 
-<<<<<<< HEAD
-    @GetMapping("/{id}") // admin/aluno
-=======
     @GetMapping("/{id}")
->>>>>>> fea1a89e86074f10fcc24d458b2f131ca2cc3541
     public ResponseEntity<?> buscarTurmaPorId(@PathVariable("id") Long id) {
         try {
             Optional<Turma> turma = turmaRepository.findById(id);
@@ -89,11 +77,7 @@ public class TurmaController {
         }
     }
 
-<<<<<<< HEAD
-    @PutMapping("/{id}") // admin
-=======
     @PutMapping("/{id}") 
->>>>>>> fea1a89e86074f10fcc24d458b2f131ca2cc3541
     public ResponseEntity<?> atualizarTurma(@PathVariable("id") Long id, @RequestBody Turma turmaAtualizada) {
         try {
             Optional<Turma> turmaExistente = turmaRepository.findById(id);
@@ -119,11 +103,7 @@ public class TurmaController {
         }
     }
 
-<<<<<<< HEAD
-    @DeleteMapping("/{id}") // admin
-=======
     @DeleteMapping("/{id}")
->>>>>>> fea1a89e86074f10fcc24d458b2f131ca2cc3541
     public ResponseEntity<?> deletarTurma(@PathVariable("id") Long id) {
         try {
             if (turmaRepository.existsById(id)) {
@@ -140,11 +120,7 @@ public class TurmaController {
         }
     }
 
-<<<<<<< HEAD
-    @PostMapping("/{id}/clonar") //admin
-=======
     @PostMapping("/{id}/clonar")
->>>>>>> fea1a89e86074f10fcc24d458b2f131ca2cc3541
     public ResponseEntity<?> clonarTurma(@PathVariable("id") Long id) {
         try {
             Optional<Turma> turmaExistente = turmaRepository.findById(id);
@@ -173,16 +149,12 @@ public class TurmaController {
         }
     }
 
-<<<<<<< HEAD
-    @PostMapping("/{codigo}/adicionar-aluno/{alunoId}") //admin/aluno
-=======
     private String gerarCodigoUnico() {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@PostMapping("/{codigo}/adicionar-aluno/{alunoId}")
->>>>>>> fea1a89e86074f10fcc24d458b2f131ca2cc3541
     public ResponseEntity<?> adicionarAluno(@PathVariable("codigo") String codigo, @PathVariable("alunoId") Long alunoId) {
         try {
             Optional<Turma> turmaOptional = turmaRepository.findAll().stream()
@@ -216,11 +188,7 @@ public class TurmaController {
         }
     }
     
-<<<<<<< HEAD
-    @DeleteMapping("/{id}/remover-aluno/{alunoId}") //admin/aluno
-=======
     @DeleteMapping("/{id}/remover-aluno/{alunoId}")
->>>>>>> fea1a89e86074f10fcc24d458b2f131ca2cc3541
     public ResponseEntity<?> removerAluno(@PathVariable("id") Long id, @PathVariable("alunoId") Long alunoId) {
         try {
             Optional<Turma> turmaOptional = turmaRepository.findById(id);
@@ -256,24 +224,20 @@ public class TurmaController {
                     .body("Erro ao remover aluno da turma.");
         }
     }
-<<<<<<< HEAD
 
-    private String gerarCodigoUnico() {
-        final String chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-        SecureRandom random = new SecureRandom();
-        String codigo;
-
-        do {
-            StringBuilder sb = new StringBuilder(8);
-            for (int i = 0; i < 8; i++) {
-                sb.append(chars.charAt(random.nextInt(chars.length())));
-            }
-            codigo = sb.toString();
-        } while (turmaRepository.existsByCodigo(codigo));
-
-        return codigo;
-    }
-
-=======
->>>>>>> fea1a89e86074f10fcc24d458b2f131ca2cc3541
+//    private String gerarCodigoUnico() {
+//        final String chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+//        SecureRandom random = new SecureRandom();
+//        String codigo;
+//
+//        do {
+//            StringBuilder sb = new StringBuilder(8);
+//            for (int i = 0; i < 8; i++) {
+//                sb.append(chars.charAt(random.nextInt(chars.length())));
+//            }
+//            codigo = sb.toString();
+//        } while (turmaRepository.existsByCodigo(codigo));
+//
+//        return codigo;
+//    }
 }
