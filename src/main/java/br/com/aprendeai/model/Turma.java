@@ -16,6 +16,7 @@ public class Turma {
     private Long id;
 
     private String nome;
+    private int qtdAlunos;
     private String codigo;
 
     @ManyToOne

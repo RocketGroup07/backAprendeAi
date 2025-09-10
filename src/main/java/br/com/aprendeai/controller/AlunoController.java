@@ -7,6 +7,7 @@ import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -22,7 +23,7 @@ import br.com.aprendeai.model.Usuario;
 import br.com.aprendeai.repository.UsuarioRepository;
 
 @RestController
-@RequestMapping("/alunos")
+@RequestMapping("/alunos") // todas as requisicoes de USER/ADMIN
 @CrossOrigin
 public class AlunoController {
 	
@@ -30,11 +31,14 @@ public class AlunoController {
 	@Autowired
 	private UsuarioRepository userRep;
 	
+	@Autowired
+	private PasswordEncoder passwordEncoder;
+	
 	@PostMapping("/")
 	public ResponseEntity<?> criarAluno(@RequestBody Usuario usuario){
 		try {
 			
-			if(usuario.getNome() == null || usuario.getNome().isEmpty() || usuario.getEmail() == null || usuario.getEmail().isEmpty()
+			if(usuario.getNome() == null || usuario.getNome().isEmpty() || usuario.getLogin() == null || usuario.getLogin().isEmpty()
 					|| usuario.getSenha() == null || usuario.getSenha().isEmpty()){
 				return ResponseEntity.badRequest().body("Preencha todos os campos.");
 			}
@@ -44,9 +48,13 @@ public class AlunoController {
 	                return emailValidation;
 	         }
 	            
+	         var passwordHash = passwordEncoder.encode(usuario.getSenha());
+	            
 	         usuario.setPapel(PapelEnum.USER);
 	         
 	         usuario.setCriadoEm(LocalDateTime.now());
+	         
+	         usuario.setSenha(passwordHash);
 	            
 	         Usuario novoUser = userRep.save(usuario);
 	         
@@ -109,7 +117,7 @@ public class AlunoController {
 	            if (verificaExiste.isPresent()) {
 	                Usuario u = verificaExiste.get();
 	                
-	                if (!u.getEmail().equals(usuarioAtualizado.getEmail())) {
+	                if (!u.getLogin().equals(usuarioAtualizado.getLogin())) {
 	                    ResponseEntity<String> emailValidation = verificarEmail(usuarioAtualizado);
 	                    if (emailValidation.getStatusCode() == HttpStatus.BAD_REQUEST) {
 	                        return emailValidation;
@@ -122,7 +130,7 @@ public class AlunoController {
 			        }
 	                
 	                u.setNome(usuarioAtualizado.getNome());
-	                u.setEmail(usuarioAtualizado.getEmail());
+	                u.setLogin(usuarioAtualizado.getLogin());
 	                
 	                userRep.save(u);
 	                
@@ -165,7 +173,7 @@ public class AlunoController {
      }
 	 
 	 private ResponseEntity<String> verificarEmail(Usuario usuario) {
-         if (userRep.existsByEmail(usuario.getEmail())) {
+         if (userRep.existsByLogin(usuario.getLogin())) {
              return ResponseEntity.badRequest()
                      .body("O email inserido já está em uso.");
          } else {

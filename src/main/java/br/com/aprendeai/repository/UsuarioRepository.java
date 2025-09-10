@@ -13,8 +13,10 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
 	
 	public List<Usuario> findByPapel(PapelEnum Papel);
 	
-	public Usuario findByEmail(String email);
+	public Usuario findByLogin(String login);
 
-	boolean existsByEmail(String email);
+	boolean existsByLogin(String login);
+	
+	
 
 }

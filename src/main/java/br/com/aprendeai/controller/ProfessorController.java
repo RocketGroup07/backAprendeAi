@@ -8,6 +8,7 @@ import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 import br.com.aprendeai.enums.PapelEnum;
@@ -15,27 +16,32 @@ import br.com.aprendeai.model.Usuario;
 import br.com.aprendeai.repository.UsuarioRepository;
 
 @RestController
-@RequestMapping("/professores")
+@RequestMapping("/professores") // todas as requisicao de ADMIN
 public class ProfessorController {
 
     @Autowired
     private UsuarioRepository userRep;
+    
+    @Autowired
+	private PasswordEncoder passwordEncoder;
 
     @PostMapping("/")
     public ResponseEntity<?> criarProfessor(@RequestBody Usuario usuario) {
         try {
             if (usuario.getNome() == null || usuario.getNome().isEmpty()
-                    || usuario.getEmail() == null || usuario.getEmail().isEmpty()
+                    || usuario.getLogin() == null || usuario.getLogin().isEmpty()
                     || usuario.getSenha() == null || usuario.getSenha().isEmpty()) {
                 return ResponseEntity.badRequest().body("Preencha todos os campos.");
             }
 
-            if (userRep.existsByEmail(usuario.getEmail())) {
+            if (userRep.existsByLogin(usuario.getLogin())) {
                 return ResponseEntity.badRequest().body("O email inserido já está em uso.");
             }
-
+            
+            var passwordHash = passwordEncoder.encode(usuario.getSenha());
             usuario.setPapel(PapelEnum.ADMIN); // Define como professor
             usuario.setCriadoEm(LocalDateTime.now());
+            usuario.setSenha(passwordHash);
             Usuario novoProfessor = userRep.save(usuario);
             return ResponseEntity.ok(novoProfessor);
 
@@ -98,7 +104,7 @@ public class ProfessorController {
             if (prof.isPresent()) {
                 Usuario u = prof.get();
                 
-                if (!u.getEmail().equals(usuarioAtualizado.getEmail())) {
+                if (!u.getLogin().equals(usuarioAtualizado.getLogin())) {
                     ResponseEntity<String> emailValidation = verificarEmail(usuarioAtualizado);
                     if (emailValidation.getStatusCode() == HttpStatus.BAD_REQUEST) {
                         return emailValidation;
@@ -107,7 +113,7 @@ public class ProfessorController {
                 
                 
                 u.setNome(usuarioAtualizado.getNome());
-                u.setEmail(usuarioAtualizado.getEmail());
+                u.setLogin(usuarioAtualizado.getLogin());
                 
                 userRep.save(u);
                 
@@ -150,7 +156,7 @@ public class ProfessorController {
     }
     
     private ResponseEntity<String> verificarEmail(Usuario usuario) {
-        if (userRep.existsByEmail(usuario.getEmail())) {
+        if (userRep.existsByLogin(usuario.getLogin())) {
             return ResponseEntity.badRequest()
                     .body("O email inserido já está em uso.");
         } else {
