@@ -21,10 +21,17 @@ public class SecurityConfiguration {
 	@Autowired
 	private SecurityFilter securityFilter;
 	
-	private static final String[] PERMIT_URLS = {
+	private static final String[] USER_URLS = {
 			"/alunos/",
-			"/login/"
+			"/posts/",
+			"/favoritos/"
 	        
+	};
+	
+	private static final String[] PERMIT_URLS = {
+			"/login/",
+			"/alunos/cadastro-com-turma",
+			"/alunos/cadastrar"
 	};
 	
 	private static final String[] ADMIN_URLS = {
@@ -39,9 +46,9 @@ public class SecurityConfiguration {
 				.csrf(AbstractHttpConfigurer::disable)
 				.sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 				.authorizeHttpRequests(authoriza -> authoriza
-//                        .requestMatchers(HttpMethod.POST, "/usuarios/").permitAll()
                         .requestMatchers(PERMIT_URLS).permitAll()
-                        .requestMatchers(ADMIN_URLS).hasRole("ADMIN")			      
+                        .requestMatchers(USER_URLS).hasRole("USER")
+                        .requestMatchers(ADMIN_URLS).hasRole("USER")			      
                         .anyRequest().authenticated()
 				)
 				.addFilterBefore(securityFilter, UsernamePasswordAuthenticationFilter.class)

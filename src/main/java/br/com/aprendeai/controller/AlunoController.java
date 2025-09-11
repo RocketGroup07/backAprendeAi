@@ -1,13 +1,15 @@
 package br.com.aprendeai.controller;
 
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -16,14 +18,22 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import br.com.aprendeai.dtos.UsuarioCreateDto;
+import br.com.aprendeai.dtos.UsuarioResponseDto;
+import br.com.aprendeai.dtos.UsuarioUpdateDto;
 import br.com.aprendeai.enums.PapelEnum;
+import br.com.aprendeai.mappers.UsuarioMapper;
+import br.com.aprendeai.model.Turma;
 import br.com.aprendeai.model.Usuario;
+import br.com.aprendeai.repository.TurmaRepository;
 import br.com.aprendeai.repository.UsuarioRepository;
+import jakarta.validation.Valid;
 
 @RestController
-@RequestMapping("/alunos") // todas as requisicoes de USER/ADMIN
+@RequestMapping("/alunos") 
 @CrossOrigin
 public class AlunoController {
 	
@@ -32,39 +42,82 @@ public class AlunoController {
 	private UsuarioRepository userRep;
 	
 	@Autowired
-	private PasswordEncoder passwordEncoder;
+	private TurmaRepository turmaRepo;
 	
-	@PostMapping("/")
-	public ResponseEntity<?> criarAluno(@RequestBody Usuario usuario){
-		try {
-			
-			if(usuario.getNome() == null || usuario.getNome().isEmpty() || usuario.getLogin() == null || usuario.getLogin().isEmpty()
-					|| usuario.getSenha() == null || usuario.getSenha().isEmpty()){
-				return ResponseEntity.badRequest().body("Preencha todos os campos.");
-			}
-			
-			 ResponseEntity<String> emailValidation = verificarEmail(usuario);
-	            if(emailValidation.getStatusCode() == HttpStatus.BAD_REQUEST) {
-	                return emailValidation;
-	         }
-	            
-	         var passwordHash = passwordEncoder.encode(usuario.getSenha());
-	            
-	         usuario.setPapel(PapelEnum.USER);
-	         
-	         usuario.setCriadoEm(LocalDateTime.now());
-	         
-	         usuario.setSenha(passwordHash);
-	            
-	         Usuario novoUser = userRep.save(usuario);
-	         
-	         return ResponseEntity.ok(novoUser);
-			
-			
-		} catch (Exception e) {
-			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-					.body("Ocorreu um erro interno no sistema.");
-		}
+	@Autowired
+	private UsuarioMapper usuarioMapper;
+	
+	@PostMapping("/cadastro-com-turma")
+	public ResponseEntity<?> cadastrarComTurma(@Valid @RequestBody UsuarioCreateDto usuarioCreateDto, 
+	                                           @RequestParam String codigoTurma) {
+	    try {
+	        // 1. Validação da turma
+	        Optional<Turma> turmaOptional = turmaRepo.findByCodigo(codigoTurma);
+	        if (turmaOptional.isEmpty()) {
+	            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+	                    .body("Código de turma inválido.");
+	        }
+
+	        Turma turma = turmaOptional.get();
+	        
+	        // 2. Validação de email/login único
+	        if (userRep.existsByLogin(usuarioCreateDto.login())) {
+	            return ResponseEntity.badRequest()
+	                    .body("O email inserido já está em uso.");
+	        }
+	        
+	        // 3. Converter DTO para Entity (o mapper já faz a validação básica e criptografia)
+	        Usuario novoAluno = usuarioMapper.toEntityFromCreateDto(usuarioCreateDto);
+	        
+	        // 4. Configurar dados adicionais
+	        novoAluno.setPapel(PapelEnum.USER);
+	        novoAluno.setCriadoEm(LocalDateTime.now());
+	        
+	        // 5. Salvar aluno
+	        Usuario alunoSalvo = userRep.save(novoAluno);
+
+	        // 6. Adicionar aluno à turma
+	        turma.getAlunos().add(alunoSalvo);
+	        turma.setQtdAlunos(turma.getAlunos().size());
+	        turmaRepo.save(turma);
+
+	        // 7. Preparar resposta
+	        Map<String, Object> response = new HashMap<>();
+	        response.put("mensagem", "Aluno cadastrado e adicionado à turma com sucesso!");
+	        response.put("aluno", usuarioMapper.toResponseDTO(alunoSalvo)); // Usar DTO, não Entity
+	        response.put("turma", turma); // Considerar criar um TurmaDTO também
+
+	        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+
+	    } catch (Exception e) {
+	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+	                .body("Erro ao cadastrar aluno na turma: " + e.getMessage());
+	    }
+	}
+	
+	@PostMapping("/cadastrar")
+	public ResponseEntity<?> criarAluno(@Valid @RequestBody UsuarioCreateDto usuarioCreateDto) {
+	    try {
+
+	        if (userRep.existsByLogin(usuarioCreateDto.login())) {
+	            return ResponseEntity.badRequest()
+	                    .body("O email inserido já está em uso.");
+	        }
+	     
+	        Usuario usuario = usuarioMapper.toEntityFromCreateDto(usuarioCreateDto);
+	        
+	        usuario.setPapel(PapelEnum.USER);
+	        usuario.setCriadoEm(LocalDateTime.now());
+	       
+	        Usuario novoUser = userRep.save(usuario);
+	        
+	        return ResponseEntity.status(HttpStatus.CREATED)
+	                .body(usuarioMapper.toResponseDTO(novoUser));
+	        
+	    } catch (Exception e) {
+	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+	                .body("Ocorreu um erro interno no sistema: " + e.getMessage());
+	    }
 	}
 	
 	@GetMapping("/")
@@ -77,7 +130,11 @@ public class AlunoController {
                         .body("Nenhum usuário encontrado.");
             } 
             
-            return ResponseEntity.ok(usuarios);
+            List<UsuarioResponseDto> usuarioDtos = usuarios.stream()
+                    .map(usuarioMapper::toResponseDTO)
+                    .collect(Collectors.toList());
+            
+            return ResponseEntity.ok(usuarioDtos);
             
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -100,7 +157,7 @@ public class AlunoController {
 		                    .body("O usuário com o id " + id + " não tem o papel de ALUNO.");
 		        }
 			
-			return ResponseEntity.ok(usuario.get());
+			 return ResponseEntity.ok(usuarioMapper.toResponseDTO(usuario.get()));
 			
 		} catch (Exception e) {
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -109,41 +166,40 @@ public class AlunoController {
 	}
 	 
 	 @PutMapping("/{id}")
-	    public ResponseEntity<?> atualizarAluno(@PathVariable("id") Long id, @RequestBody Usuario usuarioAtualizado){
+	    public ResponseEntity<?> atualizarAluno(@PathVariable("id") Long id, @Valid @RequestBody UsuarioUpdateDto usuarioUpdateDto){
 	        try {
 	            
-	            Optional<Usuario> verificaExiste = userRep.findById(id);
+	        	Optional<Usuario> usuarioExistente = userRep.findById(id);
 	            
-	            if (verificaExiste.isPresent()) {
-	                Usuario u = verificaExiste.get();
-	                
-	                if (!u.getLogin().equals(usuarioAtualizado.getLogin())) {
-	                    ResponseEntity<String> emailValidation = verificarEmail(usuarioAtualizado);
-	                    if (emailValidation.getStatusCode() == HttpStatus.BAD_REQUEST) {
-	                        return emailValidation;
-	                    }
-	                }
-	                
-	                if (verificaExiste.get().getPapel() != PapelEnum.USER) {
-			            return ResponseEntity.status(HttpStatus.FORBIDDEN)
-			                    .body("O usuário com o id " + id + " não tem o papel de ALUNO.");
-			        }
-	                
-	                u.setNome(usuarioAtualizado.getNome());
-	                u.setLogin(usuarioAtualizado.getLogin());
-	                
-	                userRep.save(u);
-	                
-	                return ResponseEntity.ok(u);
-	                
-	            } else {
+	            if (usuarioExistente.isEmpty()) {
 	                return ResponseEntity.status(HttpStatus.NOT_FOUND)
 	                        .body("Usuário não encontrado");
 	            }
 	            
+	            Usuario usuario = usuarioExistente.get();
+	            
+	            if (usuario.getPapel() != PapelEnum.USER) {
+	                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+	                        .body("O usuário com o id " + id + " não tem o papel de ALUNO.");
+	            }
+	            
+	            // Verificar se o novo login já existe (se foi alterado)
+	            if (!usuario.getLogin().equals(usuarioUpdateDto.login()) && 
+	                userRep.existsByLogin(usuarioUpdateDto.login())) {
+	                return ResponseEntity.badRequest()
+	                        .body("O email inserido já está em uso.");
+	            }
+	            
+	            // Atualizar campos usando o mapper
+	            usuarioMapper.updateEntityFromUpdateDto(usuario, usuarioUpdateDto);
+	            
+	            Usuario usuarioAtualizado = userRep.save(usuario);
+	            
+	            return ResponseEntity.ok(usuarioMapper.toResponseDTO(usuarioAtualizado));
+	            
 	        } catch (Exception e) {
 	            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-	                    .body("Ocorreu um erro interno no servidor.");
+	                    .body("Ocorreu um erro interno no servidor: " + e.getMessage());
 	        }
 	    }
 	 
@@ -169,15 +225,6 @@ public class AlunoController {
          } catch (Exception e) {
              return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                      .body("Ocorreu um erro interno no servidor.");
-         }
-     }
-	 
-	 private ResponseEntity<String> verificarEmail(Usuario usuario) {
-         if (userRep.existsByLogin(usuario.getLogin())) {
-             return ResponseEntity.badRequest()
-                     .body("O email inserido já está em uso.");
-         } else {
-             return ResponseEntity.ok("Email validado!");
          }
      }
 

@@ -149,10 +149,10 @@ public class TurmaController {
         }
     }
 
-    private String gerarCodigoUnico() {
-		// TODO Auto-generated method stub
-		return null;
-	}
+//    private String gerarCodigoUnico() {
+//		// TODO Auto-generated method stub
+//		return null;
+//	}
 
 	@PostMapping("/{codigo}/adicionar-aluno/{alunoId}")
     public ResponseEntity<?> adicionarAluno(@PathVariable("codigo") String codigo, @PathVariable("alunoId") Long alunoId) {
@@ -225,19 +225,19 @@ public class TurmaController {
         }
     }
 
-//    private String gerarCodigoUnico() {
-//        final String chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-//        SecureRandom random = new SecureRandom();
-//        String codigo;
-//
-//        do {
-//            StringBuilder sb = new StringBuilder(8);
-//            for (int i = 0; i < 8; i++) {
-//                sb.append(chars.charAt(random.nextInt(chars.length())));
-//            }
-//            codigo = sb.toString();
-//        } while (turmaRepository.existsByCodigo(codigo));
-//
-//        return codigo;
-//    }
+    private String gerarCodigoUnico() {
+        final String chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+        SecureRandom random = new SecureRandom();
+        String codigo;
+
+        do {
+            StringBuilder sb = new StringBuilder(8);
+            for (int i = 0; i < 8; i++) {
+                sb.append(chars.charAt(random.nextInt(chars.length())));
+            }
+            codigo = sb.toString();
+        } while (turmaRepository.existsByCodigo(codigo));
+
+        return codigo;
+    }
 }
