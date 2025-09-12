@@ -17,6 +17,7 @@ import br.com.aprendeai.repository.UsuarioRepository;
 
 @RestController
 @RequestMapping("/professores") // todas as requisicao de ADMIN
+@CrossOrigin
 public class ProfessorController {
 
     @Autowired

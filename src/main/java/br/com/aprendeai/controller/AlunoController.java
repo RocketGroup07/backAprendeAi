@@ -30,6 +30,7 @@ import br.com.aprendeai.model.Turma;
 import br.com.aprendeai.model.Usuario;
 import br.com.aprendeai.repository.TurmaRepository;
 import br.com.aprendeai.repository.UsuarioRepository;
+import br.com.aprendeai.service.AutenticacaoService;
 import jakarta.validation.Valid;
 
 @RestController
@@ -46,6 +47,9 @@ public class AlunoController {
 	
 	@Autowired
 	private UsuarioMapper usuarioMapper;
+	
+	@Autowired
+	private AutenticacaoService autenticacaoService;
 	
 	@PostMapping("/cadastro-com-turma")
 	public ResponseEntity<?> cadastrarComTurma(@Valid @RequestBody UsuarioCreateDto usuarioCreateDto, 
