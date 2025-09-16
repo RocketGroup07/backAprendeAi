@@ -31,7 +31,8 @@ public class SecurityConfiguration {
 	private static final String[] PERMIT_URLS = {
 			"/login/",
 			"/alunos/cadastro-com-turma",
-			"/alunos/cadastrar"
+			"/alunos/cadastrar",
+			"/api/arquivos/**"
 	};
 	
 	private static final String[] ADMIN_URLS = {

@@ -1,6 +1,5 @@
 package br.com.aprendeai.controller;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -24,10 +23,13 @@ import jakarta.validation.Valid;
 @CrossOrigin
 public class AlunoController {
 
-	@Autowired
     private AlunoService alunoService;
 
-    @PostMapping("/cadastro-com-turma")
+    public AlunoController(AlunoService alunoService) {
+		this.alunoService = alunoService;
+	}
+
+	@PostMapping("/cadastro-com-turma")
     public ResponseEntity<?> cadastrarComTurma(@Valid @RequestBody UsuarioCreateDto dto,
                                                @RequestParam String codigoTurma) {
         return ResponseEntity.status(HttpStatus.CREATED)
