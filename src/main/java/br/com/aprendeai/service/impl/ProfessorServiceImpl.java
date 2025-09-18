@@ -52,7 +52,7 @@ public class ProfessorServiceImpl implements ProfessorService{
     
     @Override
     public List<UsuarioResponseDto> listarProfessores() {
-        return usuarioRepository.findByPapel(PapelEnum.USER)
+        return usuarioRepository.findByPapel(PapelEnum.ADMIN)
                 .stream()
                 .map(usuarioMapper::toResponseDTO)
                 .collect(Collectors.toList());

@@ -32,7 +32,14 @@ public class SecurityConfiguration {
 			"/login/",
 			"/alunos/cadastro-com-turma",
 			"/alunos/cadastrar",
-			"/api/arquivos/**"
+			"/api/arquivos/**",
+			"/swagger-ui/index.html",
+	        "/swagger-ui/**",
+	        "/v3/api-docs/**",
+	        "/swagger-resources/**",
+	        "/webjars/**",
+	        "/settings/**",
+	        "/atividades"
 	};
 	
 	private static final String[] ADMIN_URLS = {

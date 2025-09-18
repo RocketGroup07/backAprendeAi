@@ -4,6 +4,8 @@ import br.com.aprendeai.model.Turma;
 import br.com.aprendeai.model.Usuario;
 import br.com.aprendeai.repository.TurmaRepository;
 import br.com.aprendeai.repository.UsuarioRepository;
+import jakarta.validation.Valid;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -25,7 +27,7 @@ public class TurmaController {
     private UsuarioRepository usuarioRepository;
 
     @PostMapping("/")
-    public ResponseEntity<?> criarTurma(@RequestBody Turma turma) {
+    public ResponseEntity<?> criarTurma(@Valid @RequestBody Turma turma) {
         try {
             if (turma.getNome() == null || turma.getNome().isEmpty() || turma.getProfessor() == null) {
                 return ResponseEntity.badRequest().body("Preencha todos os campos obrigatórios.");
@@ -85,7 +87,7 @@ public class TurmaController {
             if (turmaExistente.isPresent()) {
                 Turma turma = turmaExistente.get();
                 turma.setNome(turmaAtualizada.getNome());
-                turma.setQtdAlunos(turmaAtualizada.getQtdAlunos());
+                turma.setLimiteAlunos(turmaAtualizada.getLimiteAlunos());
                 turma.setProfessor(turmaAtualizada.getProfessor());
                 turma.setAlunos(turmaAtualizada.getAlunos());
 
@@ -133,7 +135,7 @@ public class TurmaController {
             Turma original = turmaExistente.get();
             Turma clone = new Turma();
             clone.setNome(original.getNome() + " (Cópia)");
-            clone.setQtdAlunos(0);
+            clone.setLimiteAlunos(0);
             clone.setProfessor(original.getProfessor());
             clone.setCodigo(gerarCodigoUnico());
             clone.setCriadoEm(LocalDateTime.now());
@@ -149,17 +151,10 @@ public class TurmaController {
         }
     }
 
-//    private String gerarCodigoUnico() {
-//		// TODO Auto-generated method stub
-//		return null;
-//	}
-
 	@PostMapping("/{codigo}/adicionar-aluno/{alunoId}")
     public ResponseEntity<?> adicionarAluno(@PathVariable("codigo") String codigo, @PathVariable("alunoId") Long alunoId) {
         try {
-            Optional<Turma> turmaOptional = turmaRepository.findAll().stream()
-                    .filter(t -> t.getCodigo().equals(codigo))
-                    .findFirst();
+        	Optional<Turma> turmaOptional = turmaRepository.findByCodigo(codigo);
 
             if (turmaOptional.isEmpty()) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND)
@@ -174,9 +169,16 @@ public class TurmaController {
 
             Turma turma = turmaOptional.get();
             Usuario aluno = alunoOptional.get();
+            
+            if(turma.getQtdAlunos() < turma.getLimiteAlunos()) {
+            	turma.getAlunos().add(aluno);
+            }else {
+            	return ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED)
+            			.body("A quantidade de alunos nessa turma já está completa.");
+            }
 
-            turma.getAlunos().add(aluno);
-            turma.setQtdAlunos(turma.getAlunos().size());
+            
+            turma.getQtdAlunos();
 
             turmaRepository.save(turma);
 
@@ -213,7 +215,7 @@ public class TurmaController {
             }
 
             turma.getAlunos().remove(aluno);
-            turma.setQtdAlunos(turma.getAlunos().size());
+            turma.getQtdAlunos();
 
             turmaRepository.save(turma);
 

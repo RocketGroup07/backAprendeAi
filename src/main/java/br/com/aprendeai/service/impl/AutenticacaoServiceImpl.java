@@ -15,6 +15,8 @@ import com.auth0.jwt.exceptions.JWTCreationException;
 import com.auth0.jwt.exceptions.JWTVerificationException;
 
 import br.com.aprendeai.dtos.AuthDto;
+import br.com.aprendeai.dtos.LoginResponseDto;
+import br.com.aprendeai.dtos.UsuarioResponseDto;
 import br.com.aprendeai.model.Usuario;
 import br.com.aprendeai.repository.UsuarioRepository;
 import br.com.aprendeai.service.AutenticacaoService;
@@ -37,6 +39,20 @@ public class AutenticacaoServiceImpl implements AutenticacaoService{
 		
 		return gerarTokenJwt(usuario);
 	}
+	
+	@Override
+	public LoginResponseDto autenticarELogar(AuthDto authDto) {
+        Usuario usuario = usuarioRepository.findByLogin(authDto.login());
+        if (usuario == null) {
+            throw new UsernameNotFoundException("Usuário não encontrado.");
+        }
+
+        String token = gerarTokenJwt(usuario);
+
+        UsuarioResponseDto usuarioResponse = UsuarioResponseDto.fromEntity(usuario);
+
+        return new LoginResponseDto(token, usuarioResponse, "Login bem-sucedido!");
+    }
 	
 	public String gerarTokenJwt(Usuario usuario) {
 		

@@ -63,7 +63,7 @@ public class AlunoServiceImpl implements AlunoService {
         // Adiciona à turma, evitando duplicados
         if (!turma.getAlunos().contains(alunoSalvo)) {
             turma.getAlunos().add(alunoSalvo);
-            turma.setQtdAlunos(turma.getAlunos().size());
+            turma.getQtdAlunos();
             turmaRepository.save(turma);
         }
 

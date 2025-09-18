@@ -16,7 +16,7 @@ public class Turma {
     private Long id;
 
     private String nome;
-    private int qtdAlunos;
+    private int limiteAlunos;
     private String codigo;
 
     @ManyToOne
@@ -33,4 +33,8 @@ public class Turma {
     
     @Column(name = "criado_em")
 	private LocalDateTime criadoEm;
+    
+    public int getQtdAlunos() {
+    	return alunos.size();
+    }
 }
