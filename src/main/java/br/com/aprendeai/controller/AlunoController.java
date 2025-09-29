@@ -1,5 +1,7 @@
 package br.com.aprendeai.controller;
 
+import java.util.List;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -15,12 +17,13 @@ import org.springframework.web.bind.annotation.RestController;
 
 import br.com.aprendeai.dtos.UsuarioCreateDto;
 import br.com.aprendeai.dtos.UsuarioUpdateDto;
+import br.com.aprendeai.model.Turma;
 import br.com.aprendeai.service.AlunoService;
 import jakarta.validation.Valid;
 
 @RestController
-@RequestMapping("/alunos")
 @CrossOrigin
+@RequestMapping("/alunos")
 public class AlunoController {
 
     private AlunoService alunoService;
@@ -45,6 +48,16 @@ public class AlunoController {
     @GetMapping("/")
     public ResponseEntity<?> listarAlunos() {
         return ResponseEntity.ok(alunoService.listarAlunos());
+    }
+    
+    @GetMapping("/minhas-turmas")
+    public ResponseEntity<?> listarMinhasTurmas() {
+        try {
+            List<Turma> turmas = alunoService.encontrarTurmasDoAluno();
+            return ResponseEntity.ok(turmas);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().build();
+        }
     }
 
     @GetMapping("/{id}")

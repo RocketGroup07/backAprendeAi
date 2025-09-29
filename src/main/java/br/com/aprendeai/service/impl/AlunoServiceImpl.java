@@ -4,6 +4,8 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -59,11 +61,10 @@ public class AlunoServiceImpl implements AlunoService {
         novoAluno.setCriadoEm(LocalDateTime.now());
 
         Usuario alunoSalvo = usuarioRepository.save(novoAluno);
-
-        // Adiciona à turma, evitando duplicados
+        
         if (!turma.getAlunos().contains(alunoSalvo)) {
             turma.getAlunos().add(alunoSalvo);
-            turma.getQtdAlunos();
+            turma.getAlunos().size();
             turmaRepository.save(turma);
         }
 
@@ -72,6 +73,19 @@ public class AlunoServiceImpl implements AlunoService {
 
         return new LoginResponseDto(token, usuarioMapper.toResponseDTO(alunoSalvo),
                 "Aluno cadastrado, adicionado à turma e autenticado com sucesso!");
+    }
+    
+    @Override
+    public List<Turma> encontrarTurmasDoAluno() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        
+        if (authentication != null && authentication.getPrincipal() instanceof Usuario) {
+            Usuario alunoAutenticado = (Usuario) authentication.getPrincipal();
+            
+            return turmaRepository.findByAlunos_Id(alunoAutenticado.getId());
+        }
+
+        return List.of(); 
     }
 
     @Override

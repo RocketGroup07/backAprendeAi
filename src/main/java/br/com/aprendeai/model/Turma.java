@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.Data;
 
 import java.time.LocalDateTime;
+import java.util.HashSet;
 import java.util.Set;
 
 @Entity
@@ -29,12 +30,9 @@ public class Turma {
             joinColumns = @JoinColumn(name = "turma_id"),
             inverseJoinColumns = @JoinColumn(name = "aluno_id")
     )
-    private Set<Usuario> alunos;
+    private Set<Usuario> alunos = new HashSet<>();;
     
     @Column(name = "criado_em")
 	private LocalDateTime criadoEm;
     
-    public int getQtdAlunos() {
-    	return alunos.size();
-    }
 }

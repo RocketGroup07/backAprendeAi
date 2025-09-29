@@ -20,29 +20,29 @@ public class ProfessorController {
 	}
 
 	@PostMapping("/cadastrar")
-    public ResponseEntity<?> criarAluno(@Valid @RequestBody UsuarioCreateDto dto) {
+    public ResponseEntity<?> criarProfessor(@Valid @RequestBody UsuarioCreateDto dto) {
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(professorService.criarProfessor(dto));
     }
 
     @GetMapping("/")
-    public ResponseEntity<?> listarAlunos() {
+    public ResponseEntity<?> listarProfessores() {
         return ResponseEntity.ok(professorService.listarProfessores());
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<?> buscarAluno(@PathVariable Long id) {
+    public ResponseEntity<?> buscarProfessor(@PathVariable Long id) {
         return ResponseEntity.ok(professorService.buscarProfessorPorId(id));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<?> atualizarAluno(@PathVariable Long id, @Valid @RequestBody UsuarioUpdateDto dto) {
+    public ResponseEntity<?> atualizarProfessor(@PathVariable Long id, @Valid @RequestBody UsuarioUpdateDto dto) {
         return ResponseEntity.ok(professorService.atualizarProfessor(id, dto));
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<?> deletarAluno(@PathVariable Long id) {
+    public ResponseEntity<?> deletarProfessor(@PathVariable Long id) {
         professorService.deletarProfessor(id);
-        return ResponseEntity.ok("Aluno deletado com sucesso!");
+        return ResponseEntity.ok("Professor deletado com sucesso!");
     }
 }

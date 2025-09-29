@@ -1,5 +1,6 @@
 package br.com.aprendeai.controller;
 
+import br.com.aprendeai.dtos.RequestCodigoTurmaDTO;
 import br.com.aprendeai.model.Turma;
 import br.com.aprendeai.model.Usuario;
 import br.com.aprendeai.repository.TurmaRepository;
@@ -43,6 +44,20 @@ public class TurmaController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("Ocorreu um erro interno no sistema.");
         }
+    }
+
+    @PostMapping("/validar-codigo")
+    public ResponseEntity<?> validarCodigoTurma(@RequestBody RequestCodigoTurmaDTO codigoTurma) {
+    	    	
+    	Optional<Turma> turmaBuscada = turmaRepository.findByCodigo(codigoTurma.codigoTurma());
+    	
+    	if(turmaBuscada.isPresent()) {
+    		return ResponseEntity.ok().body("A turma existe!");
+    	}else {
+    		return ResponseEntity.notFound()
+    				.build();
+    	}
+        
     }
 
     @GetMapping("/")
@@ -170,7 +185,7 @@ public class TurmaController {
             Turma turma = turmaOptional.get();
             Usuario aluno = alunoOptional.get();
             
-            if(turma.getQtdAlunos() < turma.getLimiteAlunos()) {
+            if(turma.getAlunos().size() < turma.getLimiteAlunos()) {
             	turma.getAlunos().add(aluno);
             }else {
             	return ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED)
@@ -178,7 +193,7 @@ public class TurmaController {
             }
 
             
-            turma.getQtdAlunos();
+            turma.getAlunos().size();
 
             turmaRepository.save(turma);
 
@@ -215,7 +230,7 @@ public class TurmaController {
             }
 
             turma.getAlunos().remove(aluno);
-            turma.getQtdAlunos();
+            turma.getAlunos().size();
 
             turmaRepository.save(turma);
 
