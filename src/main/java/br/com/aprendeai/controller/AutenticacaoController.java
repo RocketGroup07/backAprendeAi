@@ -3,9 +3,7 @@ package br.com.aprendeai.controller;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -15,16 +13,12 @@ import org.springframework.web.bind.annotation.RestController;
 
 import br.com.aprendeai.dtos.AuthDto;
 import br.com.aprendeai.dtos.LoginResponseDto;
-import br.com.aprendeai.dtos.UsuarioResponseDto;
 import br.com.aprendeai.service.AutenticacaoService;
 
 @RestController
 @RequestMapping("/login")
 @CrossOrigin
 public class AutenticacaoController {
-	
-	@Autowired
-	private AuthenticationManager authenticationManager;
 	
 	@Autowired
 	private AutenticacaoService autenticacaoService;
