@@ -52,6 +52,11 @@ public class PostController {
 	public List<Post> listarPostsDaTurma(@PathVariable Long turmaId) {
 	    return postRepo.findByTurmaIdAndPublicoTrueAndDataAgendadaBefore(turmaId, LocalDateTime.now());
 	}
+	
+//	@GetMapping("/turma/{turmaId}/{postId}")
+//	public List<Post> listarPostsDaTurma(@PathVariable Long turmaId, @PathVariable Long postId) {
+//	    return postRepo.findByIdAndTurmaId(postId, turmaId);
+//	}
 
 
 	@GetMapping("/turma/{turmaId}/buscar")

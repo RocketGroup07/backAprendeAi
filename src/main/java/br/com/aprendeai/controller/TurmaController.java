@@ -19,39 +19,52 @@ public class TurmaController {
 		this.turmaService = turmaService;
 	}
 	
+	@PostMapping("/")
 	public ResponseEntity<?> criarTurma(@Valid @RequestBody TurmaCreateDto dto){
 		return ResponseEntity.status(HttpStatus.CREATED)
 				.body(turmaService.criarTurma(dto));
 	}
 	
+	@PostMapping("/validar-codigo")
+	public ResponseEntity<?> validarCodigoTurma(@RequestBody RequestCodigoTurmaDTO codigoTurma){
+		return ResponseEntity.ok(turmaService.validarCodigo(codigoTurma));
+	}
+	
+	@GetMapping("/")
 	public ResponseEntity<?> listarTodas(){
 		return ResponseEntity.ok(turmaService.listarTodas());
 	}
 	
+	@GetMapping("/{id}")
 	public ResponseEntity<?> buscarPorId(@PathVariable Long id){
 		return ResponseEntity.ok(turmaService.buscarPorId(id));
 	}
 	
+	@PutMapping("/{id}")
 	public ResponseEntity<?> atualizar(@PathVariable Long id, @Valid @RequestBody TurmaUpdateDto dto){
 		return ResponseEntity.ok(turmaService.atualizar(id, dto));
 	}
 	
+	@DeleteMapping("/{id}")
 	public ResponseEntity<?> deletar(@PathVariable Long id){
 		turmaService.deletar(id);
 		return ResponseEntity.ok("Turma deletada");
 	}
 	
+	@PostMapping("/{id}/clonar")
 	public ResponseEntity<?> clonar(@PathVariable Long id){
 		turmaService.clonarTurma(id);
 		return ResponseEntity.ok("Turma clonada");
 	}
 	
+	@PostMapping("/{codigo}/adicionar-aluno/{alunoId}")
 	public ResponseEntity<?> adicionarAluno(@PathVariable ("codigo") RequestCodigoTurmaDTO codigo, @PathVariable("alunoId") Long alunoId){
 		turmaService.adicionarAluno(codigo, alunoId);
 		return ResponseEntity.ok("Aluno adicionado com sucesso!");
 	
 	}
 	
+	 @DeleteMapping("/{id}/remover-aluno/{alunoId}")
 	public ResponseEntity<?> removerAluno(@PathVariable("id") Long id, @PathVariable("alunoId") Long alunoId){
 		turmaService.removerAluno(id, alunoId);
 		return ResponseEntity.ok("Aluno removido com sucesso!");

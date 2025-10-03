@@ -15,5 +15,7 @@ public interface PostRepository extends JpaRepository<Post, Long>{
 	
 	List<Post> findByTurmaIdAndTituloContainingIgnoreCaseAndPublicoTrueAndDataAgendadaBefore(Long turmaId, String titulo, LocalDateTime agora);
 
+	List<Post> findByIdAndTurmaId(Long postId, Long turmaId);
+
 
 }

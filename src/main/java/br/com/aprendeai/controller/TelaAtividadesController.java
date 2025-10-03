@@ -1,7 +1,9 @@
 package br.com.aprendeai.controller;
 
 import br.com.aprendeai.model.Atividade;
+import br.com.aprendeai.model.Turma;
 import br.com.aprendeai.repository.AtividadeRepository;
+import br.com.aprendeai.repository.TurmaRepository;
 import br.com.aprendeai.repository.UsuarioRepository;
 import jakarta.validation.Valid;
 
@@ -19,17 +21,31 @@ public class TelaAtividadesController {
 
     private AtividadeRepository atividadeRepository;
     private UsuarioRepository usuarioRepository;
+    private TurmaRepository turmaRepository;
 
-    public TelaAtividadesController(AtividadeRepository atividadeRepository, UsuarioRepository usuarioRepository) {
+    public TelaAtividadesController(AtividadeRepository atividadeRepository, UsuarioRepository usuarioRepository, TurmaRepository turmaRepository) {
         this.atividadeRepository = atividadeRepository;
         this.usuarioRepository = usuarioRepository;
+        this.turmaRepository = turmaRepository;
     }
 
     // Criar atividade
-    @PostMapping("")
-    public ResponseEntity<?> adicionarAtividade(@Valid @RequestBody Atividade atividade) {
+    @PostMapping("/criar/{turmaId}")
+    public ResponseEntity<?> adicionarAtividade(@PathVariable ("turmaId") Long turmaId, @Valid @RequestBody Atividade atividade) {
         try {
+        	Optional<Turma> turmaOptional = turmaRepository.findById(turmaId);
+        	
+        	if(turmaOptional.isEmpty()) {
+        		return ResponseEntity.status(HttpStatus.NOT_FOUND)
+        				.body("Turma não encontrada");
+        	}
+        	
+        	Turma turma = turmaOptional.get();
+        	
+            atividade.setTurma(turma);
+            
             Atividade novaAtividade = atividadeRepository.save(atividade);
+            
             return ResponseEntity.ok(novaAtividade);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -38,10 +54,11 @@ public class TelaAtividadesController {
     }
 
     // Listar atividades
-    @GetMapping("")
-    public ResponseEntity<?> listarAtividades() {
+    @GetMapping("/{turmaId}")
+    public ResponseEntity<?> listarAtividades(@PathVariable ("turmaId") Long turmaId) {
         try {
-            List<Atividade> atividades = atividadeRepository.findAll();
+    
+            List<Atividade> atividades = atividadeRepository.findByTurmaId(turmaId);
 
             if (atividades.isEmpty()) {
                 return ResponseEntity.status(HttpStatus.NO_CONTENT).body("Nenhuma atividade cadastrada.");

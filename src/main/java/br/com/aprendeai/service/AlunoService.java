@@ -14,6 +14,8 @@ public interface AlunoService {
 	
 	public UsuarioResponseDto criarAluno(UsuarioCreateDto dto);
 	
+	public String entrarEmTurma(String codigoTurma);
+	
 	public List<UsuarioResponseDto> listarAlunos();
 	
 	public UsuarioResponseDto buscarAlunoPorId(Long id);

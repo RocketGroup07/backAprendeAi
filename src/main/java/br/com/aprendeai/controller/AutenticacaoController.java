@@ -37,11 +37,9 @@ public class AutenticacaoController {
             return ResponseEntity.ok(response);
             
         } catch (BadCredentialsException e) {
-            // Em caso de credenciais inválidas, você pode retornar um status de não autorizado
             LoginResponseDto errorResponse = new LoginResponseDto(null, null, "Login ou senha incorretos.");
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorResponse);
         } catch (Exception e) {
-            // Para outros erros (ex: erro na geração do token)
             LoginResponseDto errorResponse = new LoginResponseDto(null, null, "Ocorreu um erro ao realizar o login.");
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
         }

@@ -87,6 +87,36 @@ public class AlunoServiceImpl implements AlunoService {
 
         return List.of(); 
     }
+    
+    public String entrarEmTurma(String codigoTurma) {
+    	
+    	System.out.println(codigoTurma);
+    	Turma turma = turmaRepository.findByCodigo(codigoTurma)
+    			.orElseThrow(() -> new RuntimeException("Código de turma inválida."));
+    	
+    	Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        
+        if (authentication == null || !(authentication.getPrincipal() instanceof Usuario)) {
+            throw new RuntimeException("Aluno não autenticado.");
+        }
+        
+        Usuario alunoAutenticado = (Usuario) authentication.getPrincipal();
+       
+        Usuario aluno = usuarioRepository.findById(alunoAutenticado.getId())
+                .orElseThrow(() -> new RuntimeException("Dados do aluno não encontrados no sistema."));
+        
+        if (turma.getAlunos().contains(aluno)) {
+        	return "Aluno já faz parte desta turma.";
+        } else if(turma.getAlunos().size() == turma.getLimiteAlunos()){
+        	return "Turma cheia.";
+        } else {
+        	turma.getAlunos().add(aluno);
+            
+            turmaRepository.save(turma);
+        }
+        
+        return "Aluno cadastrado com sucesso!";
+    }
 
     @Override
     @Transactional

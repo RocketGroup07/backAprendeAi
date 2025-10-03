@@ -29,13 +29,13 @@ public class Atividade {
     private boolean entregue;
     private String conteudo; // talvez o enunciado da atividade?
     
-//    @OneToOne
-//    @JoinColumn(name = "professor_id")
-//    private Usuario professor;
-//    
-//    @OneToOne
-//    @JoinColumn(name = "turma_id")
-//    private Turma turma;
+    @OneToOne
+    @JoinColumn(name = "professor_id")
+    private Usuario professor;
+    
+    @OneToOne
+    @JoinColumn(name = "turma_id")
+    private Turma turma;
 
     
     /**
@@ -76,7 +76,7 @@ public class Atividade {
 		this.dataEntrega = dataEntrega;
 		this.entregue = false;
 		this.conteudo = conteudo;
-//		this.professor = professor;
-//		this.turma = turma;
+		this.professor = professor;
+		this.turma = turma;
 	}
 }

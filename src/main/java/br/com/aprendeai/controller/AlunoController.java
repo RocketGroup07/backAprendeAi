@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import br.com.aprendeai.dtos.RequestCodigoTurmaDTO;
 import br.com.aprendeai.dtos.UsuarioCreateDto;
 import br.com.aprendeai.dtos.UsuarioUpdateDto;
 import br.com.aprendeai.model.Turma;
@@ -43,6 +44,12 @@ public class AlunoController {
     public ResponseEntity<?> criarAluno(@Valid @RequestBody UsuarioCreateDto dto) {
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(alunoService.criarAluno(dto));
+    }
+    
+    @PostMapping("/entrar-turma")
+    public ResponseEntity<?> entrarEmTurma(@RequestBody RequestCodigoTurmaDTO codigoTurma){
+    	return ResponseEntity.status(HttpStatus.CREATED)
+    			.body(alunoService.entrarEmTurma(codigoTurma.codigoTurma()));
     }
 
     @GetMapping("/")

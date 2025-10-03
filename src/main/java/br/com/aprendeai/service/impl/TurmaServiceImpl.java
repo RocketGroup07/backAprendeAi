@@ -44,6 +44,14 @@ public class TurmaServiceImpl implements TurmaService{
     
     @Override
     @Transactional
+    public TurmaResponseDto validarCodigo(RequestCodigoTurmaDTO codigo) {
+    	Turma turmaBuscada = turmaRepository.findByCodigo(codigo.codigoTurma())
+    			.orElseThrow(() -> new EntityNotFoundException("Turma não encontrada com o código: " + codigo));
+    	return turmaMapper.toResponseDto(turmaBuscada);
+    }
+    
+    @Override
+    @Transactional
     public TurmaResponseDto buscarPorId(Long id) {
         Turma turma = turmaRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Turma não encontrada com id: " + id));
@@ -80,9 +88,9 @@ public class TurmaServiceImpl implements TurmaService{
         turmaRepository.deleteById(id);
     }
 	
-    public boolean validarCodigo(RequestCodigoTurmaDTO codigoTurma) {
-        return turmaRepository.findByCodigo(codigoTurma.codigoTurma()).isPresent();
-    }
+//    public boolean validarCodigo(RequestCodigoTurmaDTO codigoTurma) {
+//        return turmaRepository.findByCodigo(codigoTurma.codigoTurma()).isPresent();
+//    }
 
     @Override
     @Transactional

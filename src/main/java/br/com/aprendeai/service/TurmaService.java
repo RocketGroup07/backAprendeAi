@@ -25,4 +25,6 @@ public interface TurmaService {
 
 	public TurmaResponseDto removerAluno(Long turmaId, Long alunoId);
 
+	public TurmaResponseDto validarCodigo(RequestCodigoTurmaDTO codigo);
+
 }
