@@ -14,6 +14,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/arquivos")
+@CrossOrigin
 public class ArquivoController {
 
     private final ArquivoService arquivoService;
@@ -66,4 +67,20 @@ public class ArquivoController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Falha ao deletar o arquivo: " + e.getMessage());
         }
     }
+    
+//    @GetMapping("/turma/{turmaId}")
+//    public List<Arquivo> listarArquivosPorTurma(@PathVariable Long turmaId) {
+//        return arquivoRepository.findByPost_TurmaIdOrAtividade_TurmaId(turmaId, turmaId);
+//    }
+    
+
+//    @PostMapping("/upload/atividade/{atividadeId}/usuario/{usuarioId}")
+//    public Arquivo enviarEntrega(@PathVariable Long atividadeId,
+//                                 @PathVariable Long usuarioId,
+//                                 @RequestParam("file") MultipartFile file) throws IOException {
+//        Arquivo arquivo = arquivoService.uploadArquivo(file);
+//        arquivo.setAtividade(atividadeRepository.findById(atividadeId).orElseThrow());
+//        arquivo.setEnviadoPor(usuarioRepository.findById(usuarioId).orElseThrow());
+//        return arquivoRepository.save(arquivo);
+//    }
 }

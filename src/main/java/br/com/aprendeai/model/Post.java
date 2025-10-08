@@ -38,4 +38,10 @@ public class Post {
 	private boolean publico = true;
 	
 	private LocalDateTime dataAgendada;
+	
+	@OneToOne
+    @JoinColumn(name = "arquivo_id")
+    private Arquivo post;
+	
+	
 }
