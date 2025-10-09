@@ -1,12 +1,15 @@
 package br.com.aprendeai.model;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
+import br.com.aprendeai.enums.ArquivoTipo;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import lombok.Data;
@@ -36,6 +39,13 @@ public class Atividade {
     @OneToOne
     @JoinColumn(name = "turma_id")
     private Turma turma;
+    
+    @OneToOne
+    @JoinColumn(name = "arquivo_anexo_id")
+    private Arquivo arquivoAnexo;
+    
+    @OneToMany
+    private List<Arquivo> arquivosEntrega;
 
     
     /**

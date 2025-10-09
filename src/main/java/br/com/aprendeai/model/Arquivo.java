@@ -1,5 +1,6 @@
 package br.com.aprendeai.model;
 
+import br.com.aprendeai.enums.ArquivoTipo;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -19,11 +20,13 @@ public class Arquivo {
     private String tipoArquivo;
     private String caminhoArquivo; 
 
-//    @ManyToOne
-//    @JoinColumn(name = "atividade_id")
-//    private Atividade atividade;
+    @ManyToOne
+    @JoinColumn(name = "atividade_id")
+    private Atividade atividade;
 
     @ManyToOne
     @JoinColumn(name = "usuario_id")
     private Usuario enviadoPor;
+    
+    private ArquivoTipo tipo;
 }

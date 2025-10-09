@@ -9,7 +9,6 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -36,14 +35,11 @@ public class SecurityConfiguration {
 			"/alunos/cadastro-com-turma",
 			"/alunos/cadastrar",
 			"/api/arquivos/**",
-			"/swagger-ui/index.html",
-	        "/swagger-ui/**",
-	        "/v3/api-docs/**",
-	        "/swagger-resources/**",
-	        "/webjars/**",
-	        "/settings/**",
 	        "/atividades",
-	        "/turmas/validar-codigo"
+	        "/turmas/validar-codigo",
+	        "/swagger-ui.html", 
+	        "/swagger-ui/**",
+	        "/v3/api-docs/**"
 	};
 	
 	private static final String[] ADMIN_URLS = {
@@ -66,9 +62,11 @@ public class SecurityConfiguration {
 //				.csrf(AbstractHttpConfigurer::disable)
 				.sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 				.authorizeHttpRequests(authoriza -> authoriza
+						.requestMatchers("/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**").permitAll()
+						
                         .requestMatchers(PERMIT_URLS).permitAll()
                         .requestMatchers(USER_URLS).hasRole("USER")
-                        .requestMatchers(ADMIN_URLS).hasRole("USER")			      
+                        .requestMatchers(ADMIN_URLS).hasRole("ADMIN")			      
                         .anyRequest().authenticated()
 				)
 				.addFilterBefore(securityFilter, UsernamePasswordAuthenticationFilter.class)

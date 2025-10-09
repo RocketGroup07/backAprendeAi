@@ -90,7 +90,7 @@ public class PostController {
 	}
 	
 	@GetMapping("/{postId}/{turmaId}")
-	public ResponseEntity<?> listarPosts(@PathVariable Long postId, @PathVariable Long turmaId) {
+	public ResponseEntity<?> listarPostPorId(@PathVariable Long postId, @PathVariable Long turmaId) {
 		try {
 			Optional<Post> post = postRepo.findByIdAndTurmaId(postId, turmaId);
 			return ResponseEntity.ok(post);
@@ -119,7 +119,7 @@ public class PostController {
 	    );
 	}
 
-	@DeleteMapping("/{turmaId}/{postid}")
+	@DeleteMapping("/{turmaId}/{postId}")
 	public ResponseEntity<?> deletarPost(@PathVariable Long turmaId, @PathVariable Long postId){
 		Optional<Post> postExiste = postRepo.findByIdAndTurmaId(postId, turmaId);
 		
