@@ -39,7 +39,8 @@ public class SecurityConfiguration {
 	        "/turmas/validar-codigo",
 	        "/swagger-ui.html", 
 	        "/swagger-ui/**",
-	        "/v3/api-docs/**"
+	        "/v3/api-docs/**",
+	        "/api/**"
 	};
 	
 	private static final String[] ADMIN_URLS = {
