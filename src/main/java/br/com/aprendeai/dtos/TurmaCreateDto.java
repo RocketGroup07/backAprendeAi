@@ -8,10 +8,7 @@ public record TurmaCreateDto(
 		 String nome,
 		
 		 @NotNull(message = "Limite de alunos é obrigatório")
-		 Integer limiteAlunos,
-		
-		 @NotNull(message = "Professor é obrigatório (id)")
-		 Long professorId
+		 Integer limiteAlunos
 ) {
 
 }

@@ -17,6 +17,7 @@ import br.com.aprendeai.model.Usuario;
 import br.com.aprendeai.repository.TurmaRepository;
 import br.com.aprendeai.repository.UsuarioRepository;
 import br.com.aprendeai.service.TurmaService;
+import br.com.aprendeai.util.AuthenticatedUser;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 
@@ -26,18 +27,25 @@ public class TurmaServiceImpl implements TurmaService{
 	private final UsuarioRepository usuarioRepository;
     private final TurmaRepository turmaRepository;
     private final TurmaMapper turmaMapper;
+    private final AuthenticatedUser authenticatedUser;
 	
+    
+    
     public TurmaServiceImpl(UsuarioRepository usuarioRepository, TurmaRepository turmaRepository,
-			TurmaMapper turmaMapper) {
+			TurmaMapper turmaMapper, AuthenticatedUser authenticatedUser) {
 		this.usuarioRepository = usuarioRepository;
 		this.turmaRepository = turmaRepository;
 		this.turmaMapper = turmaMapper;
+		this.authenticatedUser = authenticatedUser;
 	}
-    
-    @Override
+
+	@Override
     @Transactional
     public TurmaResponseDto criarTurma(TurmaCreateDto dto) {
+		Usuario professorAutenticado = authenticatedUser.getCurrentUser();
         Turma turma = turmaMapper.toEntityFromCreateDto(dto);
+        turma.setProfessor(professorAutenticado);
+        turma.setCodigo(gerarCodigoUnico());
         Turma salva = turmaRepository.save(turma);
         return turmaMapper.toResponseDto(salva);
     }
@@ -50,7 +58,7 @@ public class TurmaServiceImpl implements TurmaService{
     	return turmaMapper.toResponseDto(turmaBuscada);
     }
     
-    @Override
+    @Override           
     @Transactional
     public TurmaResponseDto buscarPorId(Long id) {
         Turma turma = turmaRepository.findById(id)
@@ -74,6 +82,7 @@ public class TurmaServiceImpl implements TurmaService{
                 .orElseThrow(() -> new EntityNotFoundException("Turma não encontrada com id: " + id));
 
         turmaMapper.updateEntityFromUpdateDto(turma, dto);
+        verificarAcessoProfessor(turma); 
         Turma atualizada = turmaRepository.save(turma);
 
         return turmaMapper.toResponseDto(atualizada);
@@ -82,9 +91,9 @@ public class TurmaServiceImpl implements TurmaService{
     @Override
     @Transactional
     public void deletar(Long id) {
-        if (!turmaRepository.existsById(id)) {
-            throw new EntityNotFoundException("Turma não encontrada com id: " + id);
-        }
+    	Turma turma = turmaRepository.findById(id) 
+                .orElseThrow(() -> new EntityNotFoundException("Turma não encontrada com id: " + id));
+    	verificarAcessoProfessor(turma);
         turmaRepository.deleteById(id);
     }
 	
@@ -97,6 +106,8 @@ public class TurmaServiceImpl implements TurmaService{
     public TurmaResponseDto clonarTurma(Long id) {
         Turma original = turmaRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Turma não encontrada para clonagem."));
+        
+        verificarAcessoProfessor(original); 
 
         Turma clone = new Turma();
         clone.setNome(original.getNome() + " (Cópia)");
@@ -157,5 +168,13 @@ public class TurmaServiceImpl implements TurmaService{
         } while (turmaRepository.existsByCodigo(codigo));
 
         return codigo;
+    }
+    
+    private void verificarAcessoProfessor(Turma turma) {
+        Usuario usuarioAutenticado = authenticatedUser.getCurrentUser();
+        
+        if (!turma.getProfessor().getId().equals(usuarioAutenticado.getId())) {
+            throw new SecurityException("Acesso negado. Apenas o professor pode realizar esta ação.");
+        }
     }
 }
