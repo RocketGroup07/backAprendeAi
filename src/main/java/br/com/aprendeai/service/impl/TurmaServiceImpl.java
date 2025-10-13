@@ -5,6 +5,7 @@ import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.List;
 
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 
 import br.com.aprendeai.dtos.RequestCodigoTurmaDTO;
@@ -28,8 +29,6 @@ public class TurmaServiceImpl implements TurmaService{
     private final TurmaRepository turmaRepository;
     private final TurmaMapper turmaMapper;
     private final AuthenticatedUser authenticatedUser;
-	
-    
     
     public TurmaServiceImpl(UsuarioRepository usuarioRepository, TurmaRepository turmaRepository,
 			TurmaMapper turmaMapper, AuthenticatedUser authenticatedUser) {
@@ -61,16 +60,24 @@ public class TurmaServiceImpl implements TurmaService{
     @Override           
     @Transactional
     public TurmaResponseDto buscarPorId(Long id) {
-        Turma turma = turmaRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Turma não encontrada com id: " + id));
+    	Usuario usuario = getUsuarioLogado();
+    	
+    	Turma turma = buscarTurmaId(id);
+    	
+    	if (!usuarioParticipaDaTurma(usuario, turma)) {
+            throw new AccessDeniedException("Você não tem permissão para acessar essa turma.");
+        }
+       
         return turmaMapper.toResponseDto(turma);
     }
     
     @Override
     @Transactional
     public List<TurmaResponseDto> listarTodas() {
-        return turmaRepository.findAll()
-                .stream()
+    	Usuario usuario = getUsuarioLogado();
+
+        return turmaRepository.findAll().stream()
+                .filter(t -> usuarioParticipaDaTurma(usuario, t))
                 .map(turmaMapper::toResponseDto)
                 .toList();
     }
@@ -78,11 +85,9 @@ public class TurmaServiceImpl implements TurmaService{
     @Override
     @Transactional
     public TurmaResponseDto atualizar(Long id, TurmaUpdateDto dto) {
-        Turma turma = turmaRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Turma não encontrada com id: " + id));
-
-        turmaMapper.updateEntityFromUpdateDto(turma, dto);
+        Turma turma = buscarTurmaId(id);
         verificarAcessoProfessor(turma); 
+        turmaMapper.updateEntityFromUpdateDto(turma, dto);
         Turma atualizada = turmaRepository.save(turma);
 
         return turmaMapper.toResponseDto(atualizada);
@@ -91,8 +96,7 @@ public class TurmaServiceImpl implements TurmaService{
     @Override
     @Transactional
     public void deletar(Long id) {
-    	Turma turma = turmaRepository.findById(id) 
-                .orElseThrow(() -> new EntityNotFoundException("Turma não encontrada com id: " + id));
+    	Turma turma = buscarTurmaId(id);
     	verificarAcessoProfessor(turma);
         turmaRepository.deleteById(id);
     }
@@ -104,8 +108,7 @@ public class TurmaServiceImpl implements TurmaService{
     @Override
     @Transactional
     public TurmaResponseDto clonarTurma(Long id) {
-        Turma original = turmaRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Turma não encontrada para clonagem."));
+        Turma original = buscarTurmaId(id);
         
         verificarAcessoProfessor(original); 
 
@@ -125,10 +128,10 @@ public class TurmaServiceImpl implements TurmaService{
     public TurmaResponseDto adicionarAluno(RequestCodigoTurmaDTO codigo, Long alunoId) {
         Turma turma = turmaRepository.findByCodigo(codigo.codigoTurma())
                 .orElseThrow(() -> new EntityNotFoundException("Turma não encontrada."));
+        verificarAcessoProfessor(turma);
 
-        Usuario aluno = usuarioRepository.findById(alunoId)
-                .orElseThrow(() -> new EntityNotFoundException("Aluno não encontrado."));
-
+        Usuario aluno = buscarUsuarioId(alunoId);
+        
         if (turma.getAlunos().size() >= turma.getLimiteAlunos()) {
             throw new IllegalStateException("A quantidade de alunos nessa turma já está completa.");
         }
@@ -140,11 +143,9 @@ public class TurmaServiceImpl implements TurmaService{
     @Override
     @Transactional
     public TurmaResponseDto removerAluno(Long turmaId, Long alunoId) {
-        Turma turma = turmaRepository.findById(turmaId)
-                .orElseThrow(() -> new EntityNotFoundException("Turma não encontrada."));
+        Turma turma = buscarTurmaId(turmaId);
 
-        Usuario aluno = usuarioRepository.findById(alunoId)
-                .orElseThrow(() -> new EntityNotFoundException("Aluno não encontrado."));
+        Usuario aluno = buscarUsuarioId(alunoId);
 
         if (!turma.getAlunos().contains(aluno)) {
             throw new IllegalArgumentException("Aluno não está nesta turma.");
@@ -174,7 +175,25 @@ public class TurmaServiceImpl implements TurmaService{
         Usuario usuarioAutenticado = authenticatedUser.getCurrentUser();
         
         if (!turma.getProfessor().getId().equals(usuarioAutenticado.getId())) {
-            throw new SecurityException("Acesso negado. Apenas o professor pode realizar esta ação.");
+            throw new SecurityException("Apenas o professor da turma pode executar esta ação.");
         }
+    }
+    
+    private Usuario getUsuarioLogado() {
+        return authenticatedUser.getCurrentUser();
+    }
+    
+    private boolean usuarioParticipaDaTurma(Usuario usuario, Turma turma) {
+        return turma.getProfessor().getId().equals(usuario.getId()) || turma.getAlunos().contains(usuario);
+    }
+    
+    private Turma buscarTurmaId(Long id) {
+        return turmaRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Turma não encontrada com id: " + id));
+    }
+
+    private Usuario buscarUsuarioId(Long id) {
+        return usuarioRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Usuário não encontrado com id: " + id));
     }
 }

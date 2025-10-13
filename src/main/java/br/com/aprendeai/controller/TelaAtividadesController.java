@@ -29,10 +29,10 @@ import java.util.Optional;
 @CrossOrigin
 public class TelaAtividadesController {
 
-    private AtividadeRepository atividadeRepository;
-    private UsuarioRepository usuarioRepository;
-    private TurmaRepository turmaRepository;
-    private ArquivoService arquivoService;
+    private final AtividadeRepository atividadeRepository;
+    private final UsuarioRepository usuarioRepository;
+    private final TurmaRepository turmaRepository;
+    private final ArquivoService arquivoService;
 
     public TelaAtividadesController(AtividadeRepository atividadeRepository, UsuarioRepository usuarioRepository,
 			TurmaRepository turmaRepository, ArquivoService arquivoService) {

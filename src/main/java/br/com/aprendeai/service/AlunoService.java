@@ -3,10 +3,10 @@ package br.com.aprendeai.service;
 import java.util.List;
 
 import br.com.aprendeai.dtos.LoginResponseDto;
+import br.com.aprendeai.dtos.TurmaResponseDto;
 import br.com.aprendeai.dtos.UsuarioCreateDto;
 import br.com.aprendeai.dtos.UsuarioResponseDto;
 import br.com.aprendeai.dtos.UsuarioUpdateDto;
-import br.com.aprendeai.model.Turma;
 
 public interface AlunoService {
 
@@ -24,5 +24,5 @@ public interface AlunoService {
 	
 	public void deletarAluno(Long id);
 	
-	public List<Turma> encontrarTurmasDoAluno();
+	public List<TurmaResponseDto> encontrarTurmasDoAluno();
 }

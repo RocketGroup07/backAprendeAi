@@ -3,7 +3,6 @@ package br.com.aprendeai.model;
 import java.time.LocalDateTime;
 import java.util.List;
 
-import br.com.aprendeai.enums.ArquivoTipo;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;

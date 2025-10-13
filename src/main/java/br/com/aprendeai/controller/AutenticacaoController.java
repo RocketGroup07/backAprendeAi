@@ -1,6 +1,5 @@
 package br.com.aprendeai.controller;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -20,22 +19,18 @@ import br.com.aprendeai.service.AutenticacaoService;
 @CrossOrigin
 public class AutenticacaoController {
 	
-	@Autowired
-	private AutenticacaoService autenticacaoService;
+	private final AutenticacaoService autenticacaoService;
 	
+	public AutenticacaoController(AutenticacaoService autenticacaoService) {
+		this.autenticacaoService = autenticacaoService;
+	}
+
 	@PostMapping("/")
 	@ResponseStatus(HttpStatus.OK)
 	 public ResponseEntity<LoginResponseDto> login(@RequestBody AuthDto authDto) {
         try {
-//        	var usuarioAutenticationToken = new UsernamePasswordAuthenticationToken(authDto.login(), authDto.senha());
-//    		
-//    		authenticationManager.authenticate(usuarioAutenticationToken);
-//    		
-//    		return autenticacaoService.obterToken(authDto);
-        	
         	LoginResponseDto response = autenticacaoService.autenticarELogar(authDto);
             return ResponseEntity.ok(response);
-            
         } catch (BadCredentialsException e) {
             LoginResponseDto errorResponse = new LoginResponseDto(null, null, "Login ou senha incorretos.");
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorResponse);

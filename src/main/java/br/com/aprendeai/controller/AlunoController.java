@@ -16,9 +16,9 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import br.com.aprendeai.dtos.RequestCodigoTurmaDTO;
+import br.com.aprendeai.dtos.TurmaResponseDto;
 import br.com.aprendeai.dtos.UsuarioCreateDto;
 import br.com.aprendeai.dtos.UsuarioUpdateDto;
-import br.com.aprendeai.model.Turma;
 import br.com.aprendeai.service.AlunoService;
 import jakarta.validation.Valid;
 
@@ -60,7 +60,7 @@ public class AlunoController {
     @GetMapping("/minhas-turmas")
     public ResponseEntity<?> listarMinhasTurmas() {
         try {
-            List<Turma> turmas = alunoService.encontrarTurmasDoAluno();
+            List<TurmaResponseDto> turmas = alunoService.encontrarTurmasDoAluno();
             return ResponseEntity.ok(turmas);
         } catch (Exception e) {
             return ResponseEntity.badRequest().build();
