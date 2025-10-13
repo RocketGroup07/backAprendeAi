@@ -45,6 +45,7 @@ public class TurmaServiceImpl implements TurmaService{
         Turma turma = turmaMapper.toEntityFromCreateDto(dto);
         turma.setProfessor(professorAutenticado);
         turma.setCodigo(gerarCodigoUnico());
+        turma.setCriadoEm(LocalDateTime.now());
         Turma salva = turmaRepository.save(turma);
         return turmaMapper.toResponseDto(salva);
     }

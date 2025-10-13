@@ -62,7 +62,7 @@ public class ProfessorServiceImpl implements ProfessorService{
     public List<TurmaResponseDto> encontrarTurmasDoProfessor() {
     	Usuario professor = authenticatedUser.getCurrentUser();
     	
-    	return turmaRepository.findByProfessores_Id(professor.getId())
+    	return turmaRepository.findByProfessor_Id(professor.getId())
                 .stream()
                 .map(turmaMapper::toResponseDto)
                 .toList();
