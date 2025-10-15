@@ -34,6 +34,7 @@ import java.util.Optional;
 @RestController
 @RequestMapping("/atividades")
 @CrossOrigin
+
 public class TelaAtividadesController {
 
     private final AtividadeRepository atividadeRepository;
