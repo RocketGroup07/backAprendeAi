@@ -34,21 +34,21 @@ import br.com.aprendeai.service.ArquivoService;
 @CrossOrigin
 public class PostController {
 	
-	@Autowired
-	private PostRepository postRepo;
+	private final PostRepository postRepo;
+	private final UsuarioRepository userRep;
+	private final TurmaRepository turmaRepo;
+    private final ArquivoService arquivoService;
+	private final PostMapper postMapper;
 	
-	@Autowired
-	private UsuarioRepository userRep;
-	
-	@Autowired
-	private TurmaRepository turmaRepo;
-	
-	@Autowired
-    private ArquivoService arquivoService;
-	
-	@Autowired
-	private PostMapper postMapper;
-	
+	public PostController(PostRepository postRepo, UsuarioRepository userRep, TurmaRepository turmaRepo,
+			ArquivoService arquivoService, PostMapper postMapper) {
+		this.postRepo = postRepo;
+		this.userRep = userRep;
+		this.turmaRepo = turmaRepo;
+		this.arquivoService = arquivoService;
+		this.postMapper = postMapper;
+	}
+
 	@PostMapping("/criar/{usuarioId}/turma/{turmaId}")
 	public ResponseEntity<?> criarPost(@PathVariable Long usuarioId,
 	                      @PathVariable Long turmaId,

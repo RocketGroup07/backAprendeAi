@@ -10,7 +10,7 @@ import br.com.aprendeai.model.Atividade;
 @Repository
 public interface AtividadeRepository extends JpaRepository<Atividade, Long>{
 	
-	public List<Atividade> findByTurmaId(Long turmaId);
+	
 
 
 }

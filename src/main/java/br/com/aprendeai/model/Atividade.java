@@ -8,8 +8,9 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToMany;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
-import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import lombok.Data;
 
@@ -31,17 +32,12 @@ public class Atividade {
     private boolean entregue;
     private String conteudo; // talvez o enunciado da atividade?
     
-    @OneToOne
+    @ManyToOne
     @JoinColumn(name = "professor_id")
     private Usuario professor;
     
-    @OneToOne
-    @JoinColumn(name = "turma_id")
-    private Turma turma;
-    
-    @OneToOne
-    @JoinColumn(name = "arquivo_anexo_id")
-    private Arquivo arquivoAnexo;
+    @ManyToMany
+    private List<Arquivo> arquivoAnexo;
     
     @OneToMany
     private List<Arquivo> arquivosEntrega;
@@ -63,21 +59,21 @@ public class Atividade {
 //        this.entregue = true;
 //    }
 
-    @Override
-    public boolean equals(Object obj) {
-        if (this == obj) return true;
-        if (!(obj instanceof Atividade)) return false;
-        Atividade other = (Atividade) obj;
-        return titulo.equalsIgnoreCase(other.titulo);
-    }
-
-    @Override
-    public int hashCode() {
-        return titulo.toLowerCase().hashCode();
-    }
+//    @Override
+//    public boolean equals(Object obj) {
+//        if (this == obj) return true;
+//        if (!(obj instanceof Atividade)) return false;
+//        Atividade other = (Atividade) obj;
+//        return titulo.equalsIgnoreCase(other.titulo);
+//    }
+//
+//    @Override
+//    public int hashCode() {
+//        return titulo.toLowerCase().hashCode();
+//    }
 
 	public Atividade(Long id, String titulo, LocalDateTime dataAtividade, LocalDateTime dataEntrega, boolean entregue,
-			String conteudo, Usuario professor, Turma turma) {
+			String conteudo, Usuario professor) {
 		super();
 		this.id = id;
 		this.titulo = titulo;
@@ -86,6 +82,11 @@ public class Atividade {
 		this.entregue = false;
 		this.conteudo = conteudo;
 		this.professor = professor;
-		this.turma = turma;
 	}
+
+
+	public Atividade() {
+		// TODO Auto-generated constructor stub
+	}
+
 }

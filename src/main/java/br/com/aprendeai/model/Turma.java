@@ -5,6 +5,7 @@ import lombok.Data;
 
 import java.time.LocalDateTime;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 @Entity
@@ -27,6 +28,10 @@ public class Turma {
     @ManyToOne
     @JoinColumn(name = "professor_id")
     private Usuario professor;
+    
+    
+    @OneToMany
+    private List<Atividade> atividades;
 
     @ManyToMany
     @JoinTable(
