@@ -9,7 +9,6 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
-import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import lombok.Data;
 
@@ -26,7 +25,7 @@ public class Post {
 	@JoinColumn(name = "turma_id")
 	private Turma turma;
 	
-	@OneToOne
+	@ManyToOne
 	private Usuario autor;
 	
 	private String titulo;
@@ -39,7 +38,7 @@ public class Post {
 	
 	private LocalDateTime dataAgendada;
 	
-	@OneToOne
+	@ManyToOne
     @JoinColumn(name = "arquivo_id")
     private Arquivo post;
 	
