@@ -1,7 +1,10 @@
 package br.com.aprendeai.controller;
 
 import br.com.aprendeai.dtos.AtividadeCreateDto;
+import br.com.aprendeai.dtos.AtividadeResponseDto;
 import br.com.aprendeai.enums.ArquivoTipo;
+import br.com.aprendeai.mappers.AtividadeMapper;
+import br.com.aprendeai.mappers.TurmaMapperImpl;
 import br.com.aprendeai.model.Arquivo;
 import br.com.aprendeai.model.Atividade;
 import br.com.aprendeai.model.Turma;
@@ -10,6 +13,8 @@ import br.com.aprendeai.repository.AtividadeRepository;
 import br.com.aprendeai.repository.TurmaRepository;
 import br.com.aprendeai.repository.UsuarioRepository;
 import br.com.aprendeai.service.ArquivoService;
+import br.com.aprendeai.util.AuthenticatedUser;
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
 
 import org.springframework.core.io.Resource;
@@ -20,7 +25,18 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.databind.module.SimpleModule;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateDeserializer;
+
+import java.lang.reflect.Array;
+import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
@@ -30,64 +46,81 @@ import java.util.Optional;
 
 public class TelaAtividadesController {
 
+    private final TurmaMapperImpl turmaMapperImpl;
+
     private final AtividadeRepository atividadeRepository;
     private final UsuarioRepository usuarioRepository;
     private final TurmaRepository turmaRepository;
     private final ArquivoService arquivoService;
-
+    private final AuthenticatedUser authenticatedUser;
+    private final AtividadeMapper atividadeMapper;
+    private final ObjectMapper objectMapper;
+    
     public TelaAtividadesController(AtividadeRepository atividadeRepository, UsuarioRepository usuarioRepository,
-			TurmaRepository turmaRepository, ArquivoService arquivoService) {
+			TurmaRepository turmaRepository, ArquivoService arquivoService, AuthenticatedUser authenticatedUser,
+			AtividadeMapper atividadeMapper, TurmaMapperImpl turmaMapperImpl) {
 		this.atividadeRepository = atividadeRepository;
 		this.usuarioRepository = usuarioRepository;
 		this.turmaRepository = turmaRepository;
 		this.arquivoService = arquivoService;
+		this.authenticatedUser = authenticatedUser;
+		this.atividadeMapper = atividadeMapper;
+		this.turmaMapperImpl = turmaMapperImpl;
+		this.objectMapper = new ObjectMapper();
+		this.objectMapper.registerModule(new JavaTimeModule());
+		this.objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
 	}
 
-    @PostMapping(value = "/professor/criar/{turmaId}/{professorId}", consumes = {"multipart/form-data"})
-//    public ResponseEntity<?> postarAtividadeComAnexo(
-//            @PathVariable("turmaId") Long turmaId, 
-//            @PathVariable("professorId") Long professorId, 
-//            @ModelAttribute AtividadeCreateDto dto, 
-//            @RequestPart(value = "arquivo", required = false) MultipartFile arquivo) {
-//        try {
-//            Optional<Turma> turmaOptional = turmaRepository.findById(turmaId);
-//            Optional<Usuario> professorOptional = usuarioRepository.findById(professorId);
-//
-//            if (turmaOptional.isEmpty() || professorOptional.isEmpty()) {
-//                return ResponseEntity.status(HttpStatus.NOT_FOUND)
-//                        .body("Turma ou Professor não encontrado.");
-//            }
-//
-//            Turma turma = turmaOptional.get();
-//            Usuario professor = professorOptional.get();
-//
-//            atividade.setTurma(turma);
-//            atividade.setProfessor(professor);
-//            atividade.setDataAtividade(LocalDateTime.now()); 
-//
-//            if (arquivo != null && !arquivo.isEmpty()) {
-//                Arquivo arquivoAnexo = arquivoService.uploadArquivo(arquivo);
-//                
-//                // Define os campos do relacionamento
-//                arquivoAnexo.setEnviadoPor(professor);
-//                arquivoAnexo.setAtividade(atividade); 
-//                arquivoAnexo.setTipo(ArquivoTipo.ANEXO);
-//                
-//                atividade.setArquivoAnexo(arquivoAnexo); 
-//            }
-//            
-//            Atividade novaAtividade = atividadeRepository.save(atividade);
-//            
-//            return ResponseEntity.ok(novaAtividade);
-//
-//        } catch (Exception e) {
-//            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-//                    .body("Erro ao postar atividade: " + e.getMessage());
-//        }
-//    }
+    @PostMapping(value = "/criar/{turmaId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public AtividadeResponseDto criarAtividade(
+            @PathVariable Long turmaId,
+           @RequestPart(value = "atividade") String Atividade,
+            @RequestPart(value = "arquivo", required = false) MultipartFile arquivo) {
+    	
+    	AtividadeCreateDto dto = null;
+    	
+    	try {
+			 dto = objectMapper.readValue(Atividade, AtividadeCreateDto.class);
+		} catch (Exception e) {
+			System.out.println(e);
+		}
+ 
+        Usuario usuario = authenticatedUser.getCurrentUser();
+ 
+        Turma turma = buscarTurmaId(turmaId);
+
+        if (!turma.getProfessor().getId().equals(usuario.getId())) {
+        	throw new RuntimeException("Apenas o professor desta turma pode realizar a operação.");
+        }
+ 
+        try {
+            Atividade atividade = atividadeMapper.toEntityFromCreateDto(dto);
+            atividade.setProfessor(usuario);
+            atividade.setEntregue(false);
+            atividade.setDataAtividade(LocalDateTime.now());
+            atividade.setTurma(turma);
+ 
+            if (arquivo != null && !arquivo.isEmpty()) {
+                Arquivo arquivoAnexo = arquivoService.uploadArquivo(arquivo);
+                arquivoAnexo.setEnviadoPor(usuario);
+                arquivoAnexo.setAtividade(atividade);
+                arquivoAnexo.setTipo(ArquivoTipo.ANEXO);
+                atividade.setArquivoAnexo(Arrays.asList(arquivoAnexo));
+            }
+ 
+            Atividade salva = atividadeRepository.save(atividade);
+            turma.getAtividades().add(salva);
+            
+            turmaRepository.save(turma);
+           
+            return atividadeMapper.toResponseDTO(salva);
+ 
+        } catch (Exception e) {
+        	throw new RuntimeException("Ocorreu um erro interno: " + e);
+        }
+    }
     
-    
-    @GetMapping("/{atividadeId}/download/anexo")
+	@GetMapping("/{atividadeId}/download/anexo")
     public ResponseEntity<Resource> baixarArquivoAnexo(@PathVariable Long atividadeId) {
         try {
             Optional<Atividade> atividadeOptional = atividadeRepository.findById(atividadeId);
@@ -96,7 +129,7 @@ public class TelaAtividadesController {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
             }
 
-            Arquivo arquivoAnexo = atividadeOptional.get().getArquivoAnexo();
+            Arquivo arquivoAnexo = atividadeOptional.get().getArquivoAnexo().get(0);
             Resource recurso = arquivoService.downloadArquivo(arquivoAnexo.getId());
 
             String contentType = arquivoAnexo.getTipoArquivo();
@@ -107,47 +140,46 @@ public class TelaAtividadesController {
                     .body(recurso);
 
         } catch (RuntimeException e) {
-            // Lidar com falha no download ou arquivo não encontrado no serviço
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
         }
     }
     
 	// Criar atividade
-    @PostMapping("/criar/{turmaId}")
-    public ResponseEntity<?> adicionarAtividade(@PathVariable ("turmaId") Long turmaId, @Valid @RequestBody Atividade atividade) {
-        try {
-        	Optional<Turma> turmaOptional = turmaRepository.findById(turmaId);
-        	
-        	if(turmaOptional.isEmpty()) {
-        		return ResponseEntity.status(HttpStatus.NOT_FOUND)
-        				.body("Turma não encontrada");
-        	}
-        	
-        	Turma turma = turmaOptional.get();
-        	
-            atividade.setTurma(turma);
-            
-            Atividade novaAtividade = atividadeRepository.save(atividade);
-            
-            return ResponseEntity.ok(novaAtividade);
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("Erro ao salvar atividade.");
-        }
-    }
+//    @PostMapping("/criar/{turmaId}")
+//    public ResponseEntity<?> adicionarAtividade(@PathVariable ("turmaId") Long turmaId, @Valid @RequestBody AtividadeCreateDto dto) {
+//        try {
+//        	Optional<Turma> turmaOptional = turmaRepository.findById(turmaId);
+//        	
+//        	if(turmaOptional.isEmpty()) {
+//        		return ResponseEntity.status(HttpStatus.NOT_FOUND)
+//        				.body("Turma não encontrada");
+//        	}
+//        	
+//        	Turma turma = turmaOptional.get();
+//        	
+//        	Atividade atividade = atividadeMapper.toEntityFromCreateDto(dto);
+//        	
+//            atividade.setTurma(turma);
+//            
+//            Atividade novaAtividade = atividadeRepository.save(atividade);
+//            
+//            return ResponseEntity.ok(novaAtividade);
+//        } catch (Exception e) {
+//            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+//                    .body("Erro ao salvar atividade.");
+//        }
+//    }
 
     // Listar atividades
-    @GetMapping("/{turmaId}")
+    @GetMapping("/turma/{turmaId}")
     public ResponseEntity<?> listarAtividades(@PathVariable ("turmaId") Long turmaId) {
         try {
     
-            List<Atividade> atividades = atividadeRepository.findByTurmaId(turmaId);
+            Turma turma = turmaRepository.findById(turmaId)
+            		.orElseThrow(() -> new IllegalArgumentException("Turma não encontrada.") );
 
-            if (atividades.isEmpty()) {
-                return ResponseEntity.status(HttpStatus.NO_CONTENT).body("Nenhuma atividade cadastrada.");
-            }
 
-            return ResponseEntity.ok(atividades);
+            return ResponseEntity.ok(turma.getAtividades());
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("Erro ao listar atividades.");
@@ -278,5 +310,10 @@ public class TelaAtividadesController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("Erro ao entregar atividade.");
         }
+    }
+    
+    private Turma buscarTurmaId(Long id) {
+        return turmaRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Turma não encontrada com id: " + id));
     }
 }
