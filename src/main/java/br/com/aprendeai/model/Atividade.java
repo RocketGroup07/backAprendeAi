@@ -36,6 +36,10 @@ public class Atividade {
     @JoinColumn(name = "professor_id")
     private Usuario professor;
     
+    @ManyToOne
+    @JoinColumn(name = "turma_id")
+    private Turma turma;
+    
     @ManyToMany
     private List<Arquivo> arquivoAnexo;
     
