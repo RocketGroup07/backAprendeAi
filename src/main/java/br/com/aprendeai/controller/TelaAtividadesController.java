@@ -4,7 +4,6 @@ import br.com.aprendeai.dtos.AtividadeCreateDto;
 import br.com.aprendeai.dtos.AtividadeResponseDto;
 import br.com.aprendeai.enums.ArquivoTipo;
 import br.com.aprendeai.mappers.AtividadeMapper;
-import br.com.aprendeai.mappers.TurmaMapperImpl;
 import br.com.aprendeai.model.Arquivo;
 import br.com.aprendeai.model.Atividade;
 import br.com.aprendeai.model.Turma;
@@ -15,7 +14,6 @@ import br.com.aprendeai.repository.UsuarioRepository;
 import br.com.aprendeai.service.ArquivoService;
 import br.com.aprendeai.util.AuthenticatedUser;
 import jakarta.persistence.EntityNotFoundException;
-import jakarta.validation.Valid;
 
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
@@ -27,17 +25,10 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateDeserializer;
 
-import java.lang.reflect.Array;
-import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 import java.util.Optional;
 
 @RestController
@@ -46,7 +37,6 @@ import java.util.Optional;
 
 public class TelaAtividadesController {
 
-    private final TurmaMapperImpl turmaMapperImpl;
 
     private final AtividadeRepository atividadeRepository;
     private final UsuarioRepository usuarioRepository;
@@ -58,14 +48,13 @@ public class TelaAtividadesController {
     
     public TelaAtividadesController(AtividadeRepository atividadeRepository, UsuarioRepository usuarioRepository,
 			TurmaRepository turmaRepository, ArquivoService arquivoService, AuthenticatedUser authenticatedUser,
-			AtividadeMapper atividadeMapper, TurmaMapperImpl turmaMapperImpl) {
+			AtividadeMapper atividadeMapper) {
 		this.atividadeRepository = atividadeRepository;
 		this.usuarioRepository = usuarioRepository;
 		this.turmaRepository = turmaRepository;
 		this.arquivoService = arquivoService;
 		this.authenticatedUser = authenticatedUser;
 		this.atividadeMapper = atividadeMapper;
-		this.turmaMapperImpl = turmaMapperImpl;
 		this.objectMapper = new ObjectMapper();
 		this.objectMapper.registerModule(new JavaTimeModule());
 		this.objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
