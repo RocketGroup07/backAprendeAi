@@ -24,10 +24,9 @@ public class SecurityConfiguration {
 	private SecurityFilter securityFilter;
 	
 	private static final String[] USER_URLS = {
-			"/alunos/",
-			"/posts/",
-			"/favoritos/"
-	        
+			"/alunos/**",
+			"/posts/**",
+			"/favoritos/**"
 	};
 	
 	private static final String[] PERMIT_URLS = {
@@ -44,8 +43,8 @@ public class SecurityConfiguration {
 	};
 	
 	private static final String[] ADMIN_URLS = {
-			"/professores/",
-			"/turmas/"
+			"/professores/**",
+			"/turmas/**"
 	};
 	
 	

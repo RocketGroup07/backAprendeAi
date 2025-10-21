@@ -19,14 +19,14 @@ public class AdminInitializer implements CommandLineRunner{
 		this.passwordEncoder = passwordEncoder;
 	}
 	
-//	 @Override
-//	    public void run(String... args) {
-//	        if (usuarioRepository.findByLogin("admin.bytes@bytes.com").isEmpty()) {
-//	            usuarioRepository.save(new Usuario("ADMIN", "admin.bytes@bytes.com", passwordEncoder.encode("@dmin20251"), PapelEnum.ADMIN));
-//	            System.out.println("Usuário administrador criado com sucesso!");
-//	        } else {
-//	            System.out.println("Usuário administrador já existe.");
-//	        }
-//	    }
+	 @Override
+	    public void run(String... args) {
+	        if (!usuarioRepository.existsByLogin("admin.bytes@bytes.com")) {
+	            usuarioRepository.save(new Usuario("ADMIN", "admin.bytes@bytes.com", passwordEncoder.encode("@dmin20251"), PapelEnum.ADMIN));
+	            System.out.println("Usuário administrador criado com sucesso!");
+	        } else {
+	            System.out.println("Usuário administrador já existe.");
+	        }
+	    }
 	
 }
