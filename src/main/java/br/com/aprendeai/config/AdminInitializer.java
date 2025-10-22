@@ -28,5 +28,6 @@ public class AdminInitializer implements CommandLineRunner{
 //	            System.out.println("Usuário administrador já existe.");
 //	        }
 //	    }
+	        if (!usuarioRepository.existsByLogin("admin.bytes@bytes.com")) {
 	
 }

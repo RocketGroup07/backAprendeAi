@@ -28,6 +28,9 @@ public class SecurityConfiguration {
 			"/posts/",
 			"/favoritos/"
 	        
+			"/alunos/**",
+			"/posts/**",
+			"/favoritos/**"
 	};
 	
 	private static final String[] PERMIT_URLS = {
@@ -46,6 +49,8 @@ public class SecurityConfiguration {
 	private static final String[] ADMIN_URLS = {
 			"/professores/",
 			"/turmas/"
+			"/professores/**",
+			"/turmas/**"
 	};
 	
 	
