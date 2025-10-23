@@ -15,23 +15,27 @@ import jakarta.validation.Valid;
 @CrossOrigin
 public class RedefinicaoSenhaController {
 
-    private RedefinicaoSenhaService service = null;
+    private final RedefinicaoSenhaService service;
 
-    public void RedefinicaoSenhaControllerRest(RedefinicaoSenhaService service) {
+   
+    public RedefinicaoSenhaController(RedefinicaoSenhaService service) {
         this.service = service;
     }
 
     @PostMapping("/solicitar")
-    public ResponseEntity<?> solicitar(@Valid @RequestBody RedefinicaoRequestDto dto) {
+    public String solicitar(@Valid @RequestBody RedefinicaoRequestDto dto) {
         String codigo = gerarCodigo();
-        service.solicitarRedefinicao(dto.email(), codigo);
-        return ResponseEntity.status(HttpStatus.CREATED).build();
+//        service.solicitarRedefinicao(dto.email(), codigo);
+//        return ResponseEntity.status(HttpStatus.CREATED).build();
+        return codigo;
     }
 
     @PostMapping("/validar")
     public ResponseEntity<?> validar(@Valid @RequestBody ValidarCodigoDto dto) {
         boolean ok = service.validarCodigo(dto.email(), dto.codigo());
-        if (ok) return ResponseEntity.ok().build();
+        if (ok) {
+            return ResponseEntity.ok().build();
+        }
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Código inválido ou expirado");
     }
 
@@ -39,8 +43,9 @@ public class RedefinicaoSenhaController {
         StringBuilder sb = new StringBuilder(8);
         String chars = "0123456789";
         java.security.SecureRandom rnd = new java.security.SecureRandom();
-        for (int i = 0; i < 8; i++) sb.append(chars.charAt(rnd.nextInt(chars.length())));
+        for (int i = 0; i < 8; i++) {
+            sb.append(chars.charAt(rnd.nextInt(chars.length())));
+        }
         return sb.toString();
     }
 }
-
