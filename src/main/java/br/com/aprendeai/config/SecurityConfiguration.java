@@ -24,10 +24,6 @@ public class SecurityConfiguration {
 	private SecurityFilter securityFilter;
 	
 	private static final String[] USER_URLS = {
-			"/alunos/",
-			"/posts/",
-			"/favoritos/"
-	        
 			"/alunos/**",
 			"/posts/**",
 			"/favoritos/**"
@@ -38,7 +34,7 @@ public class SecurityConfiguration {
 			"/alunos/cadastro-com-turma",
 			"/alunos/cadastrar",
 			"/api/arquivos/**",
-	        "/atividades",
+	        "/atividades/",
 	        "/turmas/validar-codigo",
 	        "/swagger-ui.html", 
 	        "/swagger-ui/**",
@@ -47,8 +43,6 @@ public class SecurityConfiguration {
 	};
 	
 	private static final String[] ADMIN_URLS = {
-			"/professores/",
-			"/turmas/"
 			"/professores/**",
 			"/turmas/**"
 	};
