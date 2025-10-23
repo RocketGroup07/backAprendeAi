@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 import br.com.aprendeai.enums.StatusAtividade;
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -34,6 +35,7 @@ public class Atividade {
     private  LocalDateTime dataEntrega;
     private boolean entregue;
     private String conteudo; // talvez o enunciado da atividade?
+    private Double nota;
     
     @ManyToOne
     @JoinColumn(name = "professor_id")
@@ -46,57 +48,23 @@ public class Atividade {
     @ManyToMany
     private List<Arquivo> arquivoAnexo;
     
-    @OneToMany
+    @OneToMany(mappedBy = "atividade", cascade = CascadeType.ALL)
     private List<Arquivo> arquivosEntrega;
     
-    @Enumerated(EnumType.STRING)
-    private StatusAtividade status;
-
+    private String resposta;
     
-    /**
-     * Define o comentário da atividade.
-     * @param comentario Comentário do usuário.
-     */
-//    public void setComentario(String comentario) {
-//        if (comentario == null) throw new IllegalArgumentException("Comentário não pode ser nulo");
-//        this.comentario = comentario;
-//    }
-
-    /**
-     * Marca a atividade como entregue.
-     */
-//    public void entregar() {
-//        this.entregue = true;
-//    }
-
-//    @Override
-//    public boolean equals(Object obj) {
-//        if (this == obj) return true;
-//        if (!(obj instanceof Atividade)) return false;
-//        Atividade other = (Atividade) obj;
-//        return titulo.equalsIgnoreCase(other.titulo);
-//    }
-//
-//    @Override
-//    public int hashCode() {
-//        return titulo.toLowerCase().hashCode();
-//    }
-
-	public Atividade(Long id, String titulo, LocalDateTime dataAtividade, LocalDateTime dataEntrega, boolean entregue,
-			String conteudo, Usuario professor) {
-		super();
-		this.id = id;
-		this.titulo = titulo;
-		this.dataAtividade = dataAtividade;
-		this.dataEntrega = dataEntrega;
-		this.entregue = false;
-		this.conteudo = conteudo;
-		this.professor = professor;
+    @Enumerated(EnumType.STRING)
+    private StatusAtividade status = StatusAtividade.PENDENTE;
+	
+	
+	public void entregar() {
+		this.entregue = true;
+		this.status = StatusAtividade.ENTREGUE;
 	}
-
-
-	public Atividade() {
-		// TODO Auto-generated constructor stub
+	
+	public void corrigir(Double nota) {
+		this.nota = nota;
+		this.status = StatusAtividade.CORRIGIDA;
 	}
 
 }

@@ -2,7 +2,10 @@ package br.com.aprendeai.controller;
 
 import br.com.aprendeai.dtos.AtividadeCreateDto;
 import br.com.aprendeai.dtos.AtividadeResponseDto;
+import br.com.aprendeai.dtos.AtividadeSubmitRequestDto;
+import br.com.aprendeai.dtos.RequestNotaDto;
 import br.com.aprendeai.enums.ArquivoTipo;
+import br.com.aprendeai.enums.StatusAtividade;
 import br.com.aprendeai.mappers.AtividadeMapper;
 import br.com.aprendeai.model.Arquivo;
 import br.com.aprendeai.model.Atividade;
@@ -29,6 +32,7 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
 import java.time.LocalDateTime;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 
 @RestController
@@ -161,53 +165,49 @@ public class TelaAtividadesController {
 
     // Listar atividades
     @GetMapping("/turma/{turmaId}")
-    public ResponseEntity<?> listarAtividades(@PathVariable ("turmaId") Long turmaId) {
-        try {
-    
-            Turma turma = turmaRepository.findById(turmaId)
-            		.orElseThrow(() -> new IllegalArgumentException("Turma não encontrada.") );
-
-
-            return ResponseEntity.ok(turma.getAtividades());
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("Erro ao listar atividades.");
-        }
+    public List<AtividadeResponseDto> listarAtividades(@PathVariable Long turmaId) {
+    	List<Atividade> atividades = atividadeRepository.findByTurma_Id(turmaId);
+    	return atividades.stream()
+    			.map(atividadeMapper::toResponseDTO)
+    			.toList();
     }
     
-    @PostMapping(value = "/{atividadeId}/entregar/arquivo/{alunoId}", consumes = {"multipart/form-data"})
-    public ResponseEntity<?> entregarTarefaComArquivo(
+    @PostMapping(value = "/{atividadeId}/entregar/{alunoId}", consumes = {"multipart/form-data"})
+    public ResponseEntity<?> entregarTarefa(
             @PathVariable("atividadeId") Long atividadeId,
             @PathVariable("alunoId") Long alunoId,
+            @RequestPart(value = "resposta") String resposta,
             @RequestPart("arquivo") MultipartFile arquivo) {
         try {
-            if (arquivo.isEmpty()) {
-                return ResponseEntity.badRequest().body("O arquivo de entrega não pode ser vazio.");
-            }
-
-            Optional<Atividade> atividadeOptional = atividadeRepository.findById(atividadeId);
-            Optional<Usuario> alunoOptional = usuarioRepository.findById(alunoId);
-
-            if (atividadeOptional.isEmpty() || alunoOptional.isEmpty()) {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                        .body("Atividade ou Aluno não encontrado.");
-            }
-
-            Atividade atividade = atividadeOptional.get();
-            Usuario aluno = alunoOptional.get();
-
-            Arquivo arquivoEntrega = arquivoService.uploadArquivo(arquivo);
-
-            arquivoEntrega.setEnviadoPor(aluno);
-            arquivoEntrega.setAtividade(atividade); 
-            arquivoEntrega.setTipo(ArquivoTipo.ENTREGA);
+        	
+        	Usuario usuario = authenticatedUser.getCurrentUser();
+        	 
+            Atividade atividade = buscarAtividadeId(atividadeId);
             
-            if (!atividade.isEntregue()) {
-                atividade.setEntregue(true);
-                atividadeRepository.save(atividade);
+            if(!atividade.getTurma().getAlunos().equals(alunoId) && usuario.getId().equals(alunoId)) {
+            	throw new RuntimeException("Apenas o aluno desta turma pode realizar a operação.");
             }
+        	
+        	AtividadeSubmitRequestDto dto = null;
+        	
+        	dto = objectMapper.readValue(resposta, AtividadeSubmitRequestDto.class);
+        	
+        	if (arquivo != null && !arquivo.isEmpty()) {
+        		Arquivo arquivoEntrega = arquivoService.uploadArquivo(arquivo);
+        		arquivoEntrega.setEnviadoPor(usuario);
+        		arquivoEntrega.setAtividade(atividade);
+        		arquivoEntrega.setTipo(ArquivoTipo.ENTREGA);
+        		atividade.setArquivosEntrega(Arrays.asList(arquivoEntrega));
+        	}
+        	
+        	if(resposta != null) {
+        		atividade.setResposta(resposta);
+        	}
+        	
+        	atividade.setEntregue(true);
+        	atividade.setStatus(StatusAtividade.ENTREGUE);
 
-            return ResponseEntity.ok(arquivoEntrega);
+            return ResponseEntity.ok(atividadeMapper.toResponseDTO(atividade));
 
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -230,6 +230,34 @@ public class TelaAtividadesController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("Erro ao buscar atividade.");
         }
+    }
+    
+    @PutMapping("/{atividadeId}/corrigir")
+    public ResponseEntity<?> corrigirAtividade(@PathVariable("atividadeId") Long atividadeId, @RequestBody RequestNotaDto dto){
+    	
+    	try {
+			Atividade atividade = buscarAtividadeId(atividadeId);
+			
+			if(atividade == null) {
+				return ResponseEntity.status(HttpStatus.NOT_FOUND)
+						.body("Atividade não encontrada.");
+			}
+			
+			if(atividade.getStatus() != StatusAtividade.ENTREGUE) {
+				return ResponseEntity.badRequest()
+						.body("A atividade só pode ser corrigida após ser entregue");
+			}
+			
+			atividade.corrigir(dto.nota());
+			atividade.setStatus(StatusAtividade.CORRIGIDA);
+			atividadeRepository.save(atividade);
+			
+			return ResponseEntity.ok(atividadeMapper.toResponseDTO(atividade));
+			
+		} catch (Exception e) {
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+					.body("Erro ao corrigir atividade: " + e.getMessage());
+		}
     }
 
     // Atualizar atividade
@@ -276,33 +304,38 @@ public class TelaAtividadesController {
     }
 
     // Marcar atividade como entregue
-    @PostMapping("/{id}/entregar")
-    public ResponseEntity<?> entregarAtividade(@PathVariable("id") Long id) {
-        try {
-            Optional<Atividade> atividadeOptional = atividadeRepository.findById(id);
-
-            if (atividadeOptional.isEmpty()) {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Atividade não encontrada.");
-            }
-
-            Atividade atividade = atividadeOptional.get();
-            if (atividade.isEntregue()) {
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Atividade já foi entregue.");
-            }
-
-            atividade.setEntregue(true);
-            atividadeRepository.save(atividade);
-
-            return ResponseEntity.ok("Atividade marcada como entregue.");
-
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("Erro ao entregar atividade.");
-        }
-    }
-    
+//    @PostMapping("/{id}/entregar")
+//    public ResponseEntity<?> entregarAtividade(@PathVariable("id") Long id) {
+//        try {
+//            Optional<Atividade> atividadeOptional = atividadeRepository.findById(id);
+//
+//            if (atividadeOptional.isEmpty()) {
+//                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Atividade não encontrada.");
+//            }
+//
+//            Atividade atividade = atividadeOptional.get();
+//            if (atividade.isEntregue()) {
+//                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Atividade já foi entregue.");
+//            }
+//
+//            atividade.setEntregue(true);
+//            atividadeRepository.save(atividade);
+//
+//            return ResponseEntity.ok("Atividade marcada como entregue.");
+//
+//        } catch (Exception e) {
+//            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+//                    .body("Erro ao entregar atividade.");
+//        }
+//    }
+//    
     private Turma buscarTurmaId(Long id) {
         return turmaRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Turma não encontrada com id: " + id));
+    }
+    
+    private Atividade buscarAtividadeId(Long id) {
+    	return atividadeRepository.findById(id)
+    			.orElseThrow(() -> new EntityNotFoundException("Atividade não encontrada com id " +id));
     }
 }
