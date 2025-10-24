@@ -75,6 +75,10 @@ public class PostController {
 	        novoPost.setConteudo(postRequest.conteudo());
 	        novoPost.setPublico(postRequest.publico()); 
 	        novoPost.setDataPostagem(LocalDateTime.now());
+	        
+	        if(novoPost.getDataPostagem() == null) {
+	        	novoPost.setDataPostagem(LocalDateTime.now());
+	        }
 
 	        if (arquivoSalvo != null) {
 	            novoPost.setPost(arquivoSalvo);

@@ -32,6 +32,8 @@ public class TurmaController {
 	
 	@GetMapping("/")
 	public ResponseEntity<?> listarTodas(){
+		System.out.println("Passou no listar todas...");
+		
 		return ResponseEntity.ok(turmaService.listarTodas());
 	}
 	

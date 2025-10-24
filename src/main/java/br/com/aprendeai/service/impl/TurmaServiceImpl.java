@@ -7,11 +7,12 @@ import java.util.List;
 
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
-
+import br.com.aprendeai.config.AdminInitializer;
 import br.com.aprendeai.dtos.RequestCodigoTurmaDTO;
 import br.com.aprendeai.dtos.TurmaCreateDto;
 import br.com.aprendeai.dtos.TurmaResponseDto;
 import br.com.aprendeai.dtos.TurmaUpdateDto;
+import br.com.aprendeai.enums.PapelEnum;
 import br.com.aprendeai.mappers.TurmaMapper;
 import br.com.aprendeai.model.Turma;
 import br.com.aprendeai.model.Usuario;
@@ -24,6 +25,8 @@ import jakarta.transaction.Transactional;
 
 @Service
 public class TurmaServiceImpl implements TurmaService{
+
+    private final AdminInitializer adminInitializer;
 	
 	private final UsuarioRepository usuarioRepository;
     private final TurmaRepository turmaRepository;
@@ -31,17 +34,23 @@ public class TurmaServiceImpl implements TurmaService{
     private final AuthenticatedUser authenticatedUser;
     
     public TurmaServiceImpl(UsuarioRepository usuarioRepository, TurmaRepository turmaRepository,
-			TurmaMapper turmaMapper, AuthenticatedUser authenticatedUser) {
+			TurmaMapper turmaMapper, AuthenticatedUser authenticatedUser, AdminInitializer adminInitializer) {
 		this.usuarioRepository = usuarioRepository;
 		this.turmaRepository = turmaRepository;
 		this.turmaMapper = turmaMapper;
 		this.authenticatedUser = authenticatedUser;
+		this.adminInitializer = adminInitializer;
 	}
 
 	@Override
     @Transactional
     public TurmaResponseDto criarTurma(TurmaCreateDto dto) {
 		Usuario professorAutenticado = authenticatedUser.getCurrentUser();
+		
+		if(!professorAutenticado.getPapel().equals(PapelEnum.ADMIN)) {
+			throw new AccessDeniedException("Apenas usuários ADMIN podem criar turmas.");
+		}
+		
         Turma turma = turmaMapper.toEntityFromCreateDto(dto);
         turma.setProfessor(professorAutenticado);
         turma.setCodigo(gerarCodigoUnico());
@@ -77,6 +86,9 @@ public class TurmaServiceImpl implements TurmaService{
     public List<TurmaResponseDto> listarTodas() {
     	Usuario usuario = getUsuarioLogado();
 
+    	System.out.println("======================================================");
+    	System.out.println("Encontrando turma do sistema....");
+    	
         return turmaRepository.findAll().stream()
                 .filter(t -> usuarioParticipaDaTurma(usuario, t))
                 .map(turmaMapper::toResponseDto)
@@ -185,6 +197,9 @@ public class TurmaServiceImpl implements TurmaService{
     }
     
     private boolean usuarioParticipaDaTurma(Usuario usuario, Turma turma) {
+    	System.out.println("======================= ABAIXO ===========================");
+    	System.out.println(turma.getProfessor().getId().equals(usuario.getId()));
+    	
         return turma.getProfessor().getId().equals(usuario.getId()) || turma.getAlunos().contains(usuario);
     }
     

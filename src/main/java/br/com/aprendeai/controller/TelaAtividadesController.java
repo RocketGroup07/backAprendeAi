@@ -25,6 +25,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.server.ResponseStatusException;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
@@ -40,7 +41,6 @@ import java.util.Optional;
 @CrossOrigin
 
 public class TelaAtividadesController {
-
 
     private final AtividadeRepository atividadeRepository;
     private final UsuarioRepository usuarioRepository;
@@ -137,43 +137,27 @@ public class TelaAtividadesController {
         }
     }
     
-	// Criar atividade
-//    @PostMapping("/criar/{turmaId}")
-//    public ResponseEntity<?> adicionarAtividade(@PathVariable ("turmaId") Long turmaId, @Valid @RequestBody AtividadeCreateDto dto) {
-//        try {
-//        	Optional<Turma> turmaOptional = turmaRepository.findById(turmaId);
-//        	
-//        	if(turmaOptional.isEmpty()) {
-//        		return ResponseEntity.status(HttpStatus.NOT_FOUND)
-//        				.body("Turma não encontrada");
-//        	}
-//        	
-//        	Turma turma = turmaOptional.get();
-//        	
-//        	Atividade atividade = atividadeMapper.toEntityFromCreateDto(dto);
-//        	
-//            atividade.setTurma(turma);
-//            
-//            Atividade novaAtividade = atividadeRepository.save(atividade);
-//            
-//            return ResponseEntity.ok(novaAtividade);
-//        } catch (Exception e) {
-//            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-//                    .body("Erro ao salvar atividade.");
-//        }
-//    }
-
     // Listar atividades
     @GetMapping("/turma/{turmaId}")
     public List<AtividadeResponseDto> listarAtividades(@PathVariable Long turmaId) {
+    	Usuario usuario = authenticatedUser.getCurrentUser();
+    	
+    	Optional<Turma> turma = turmaRepository.findById(turmaId);
+    	
+    	Turma turmaBuscada = turma.get();
+    	
+    	if(!turmaBuscada.getAlunos().contains(usuario)) {
+    		throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Acesso negado. O usuário não pertence a esta turma.");
+    	}
+    	
     	List<Atividade> atividades = atividadeRepository.findByTurma_Id(turmaId);
     	return atividades.stream()
     			.map(atividadeMapper::toResponseDTO)
     			.toList();
     }
     
-    @PostMapping(value = "/{atividadeId}/entregar/{alunoId}", consumes = {"multipart/form-data"})
-    public ResponseEntity<?> entregarTarefa(
+    @PostMapping(value = "/{atividadeId}/entregar/", consumes = {"multipart/form-data"})
+    public ResponseEntity<?> entregarAtividade(
             @PathVariable("atividadeId") Long atividadeId,
             @PathVariable("alunoId") Long alunoId,
             @RequestPart(value = "resposta") String resposta,
@@ -184,8 +168,13 @@ public class TelaAtividadesController {
         	 
             Atividade atividade = buscarAtividadeId(atividadeId);
             
-            if(!atividade.getTurma().getAlunos().equals(alunoId) && usuario.getId().equals(alunoId)) {
-            	throw new RuntimeException("Apenas o aluno desta turma pode realizar a operação.");
+            boolean pertenceATurma = atividade.getTurma()
+            		.getAlunos()
+            		.stream()
+            		.anyMatch(aluno -> aluno.getId().equals(usuario.getId()));
+            
+            if(!pertenceATurma) {
+            	throw new RuntimeException("Apenas alunos dessa turma podem entregar atividades.");
             }
         	
         	AtividadeSubmitRequestDto dto = null;
@@ -215,7 +204,6 @@ public class TelaAtividadesController {
         }
     }
 
-    // Buscar atividade por ID
     @GetMapping("/{id}")
     public ResponseEntity<?> buscarPorId(@PathVariable("id") Long id) {
         try {
@@ -236,11 +224,13 @@ public class TelaAtividadesController {
     public ResponseEntity<?> corrigirAtividade(@PathVariable("atividadeId") Long atividadeId, @RequestBody RequestNotaDto dto){
     	
     	try {
+    		Usuario usuario = authenticatedUser.getCurrentUser();
+    		
 			Atividade atividade = buscarAtividadeId(atividadeId);
 			
-			if(atividade == null) {
-				return ResponseEntity.status(HttpStatus.NOT_FOUND)
-						.body("Atividade não encontrada.");
+			if(!atividade.getTurma().getProfessor().getId().equals(usuario.getId())) {
+				return ResponseEntity.status(HttpStatus.FORBIDDEN)
+						.body("Apenas o professor desta turma pode realizar esta operação.");
 			}
 			
 			if(atividade.getStatus() != StatusAtividade.ENTREGUE) {
@@ -303,32 +293,6 @@ public class TelaAtividadesController {
         }
     }
 
-    // Marcar atividade como entregue
-//    @PostMapping("/{id}/entregar")
-//    public ResponseEntity<?> entregarAtividade(@PathVariable("id") Long id) {
-//        try {
-//            Optional<Atividade> atividadeOptional = atividadeRepository.findById(id);
-//
-//            if (atividadeOptional.isEmpty()) {
-//                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Atividade não encontrada.");
-//            }
-//
-//            Atividade atividade = atividadeOptional.get();
-//            if (atividade.isEntregue()) {
-//                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Atividade já foi entregue.");
-//            }
-//
-//            atividade.setEntregue(true);
-//            atividadeRepository.save(atividade);
-//
-//            return ResponseEntity.ok("Atividade marcada como entregue.");
-//
-//        } catch (Exception e) {
-//            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-//                    .body("Erro ao entregar atividade.");
-//        }
-//    }
-//    
     private Turma buscarTurmaId(Long id) {
         return turmaRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Turma não encontrada com id: " + id));

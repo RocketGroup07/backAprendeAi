@@ -2,13 +2,15 @@ package br.com.aprendeai.dtos;
 
 import java.time.LocalDateTime;
 
+import br.com.aprendeai.enums.PapelEnum;
 import br.com.aprendeai.model.Usuario;
 
 public record UsuarioResponseDto(
 		Long id,
 		String nome,
 		String login,
-		LocalDateTime criadoEm
+		LocalDateTime criadoEm,
+		PapelEnum papel
 ) {
 	
 	public static UsuarioResponseDto fromEntity(Usuario usuario) {
@@ -19,7 +21,8 @@ public record UsuarioResponseDto(
             usuario.getId(),
             usuario.getNome(),
             usuario.getLogin(),
-            usuario.getCriadoEm()
+            usuario.getCriadoEm(),
+            usuario.getPapel()
         );
     }
 }
