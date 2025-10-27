@@ -1,6 +1,7 @@
 package br.com.aprendeai.dtos;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 public record PostResponseDto(
 		Long postId,
@@ -8,7 +9,9 @@ public record PostResponseDto(
 	    String titulo,
 	    String conteudo,
 	    String autor,
-	    LocalDateTime data
+	    LocalDateTime data,
+	    List<String> nomeArquivo,
+	    List<ComentarioResponseDto> comentarios
 		) {
 
 }

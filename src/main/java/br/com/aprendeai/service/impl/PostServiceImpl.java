@@ -1,0 +1,115 @@
+package br.com.aprendeai.service.impl;
+
+import java.time.LocalDateTime;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Optional;
+
+import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
+
+import br.com.aprendeai.config.AccessControlService;
+import br.com.aprendeai.dtos.PostCreateDto;
+import br.com.aprendeai.dtos.PostResponseDto;
+import br.com.aprendeai.mappers.PostMapper;
+import br.com.aprendeai.model.Arquivo;
+import br.com.aprendeai.model.Post;
+import br.com.aprendeai.model.Turma;
+import br.com.aprendeai.model.Usuario;
+import br.com.aprendeai.repository.PostRepository;
+import br.com.aprendeai.repository.TurmaRepository;
+import br.com.aprendeai.repository.UsuarioRepository;
+import br.com.aprendeai.service.ArquivoService;
+import br.com.aprendeai.service.PostService;
+import jakarta.persistence.EntityNotFoundException;
+
+@Service
+public class PostServiceImpl implements PostService{
+	
+	private final PostRepository postRepo;
+	private final UsuarioRepository userRep;
+	private final TurmaRepository turmaRepo;
+    private final ArquivoService arquivoService;
+	private final PostMapper postMapper;
+	private final AccessControlService accessControlService;
+	
+	public PostServiceImpl(PostRepository postRepo, UsuarioRepository userRep, TurmaRepository turmaRepo,
+			ArquivoService arquivoService, PostMapper postMapper, AccessControlService accessControlService) {
+		this.postRepo = postRepo;
+		this.userRep = userRep;
+		this.turmaRepo = turmaRepo;
+		this.arquivoService = arquivoService;
+		this.postMapper = postMapper;
+		this.accessControlService = accessControlService;
+	}
+	
+	public PostResponseDto criarPost(Long usuarioId, Long turmaId, PostCreateDto postRequest, MultipartFile arquivo) {
+		
+		Usuario autor = userRep.findById(usuarioId)
+                .orElseThrow(() -> new RuntimeException("Usuário não encontrado."));
+        Turma turma = turmaRepo.findById(turmaId)
+                .orElseThrow(() -> new RuntimeException("Turma não encontrada."));
+        
+        Arquivo arquivoSalvo = null;
+        
+        accessControlService.usuarioParticipaDaTurma(autor, turma);
+        
+        Post novoPost = postMapper.toEntityFromCreateDto(postRequest);
+        novoPost.setAutor(autor);
+        novoPost.setTurma(turma);
+        novoPost.setTitulo(postRequest.titulo()); 
+        novoPost.setConteudo(postRequest.conteudo());
+        novoPost.setPublico(postRequest.publico()); 
+        
+        if(postRequest.dataPostagem() == null) {
+        	novoPost.setDataPostagem(LocalDateTime.now());
+        }else {
+        	novoPost.setDataPostagem(postRequest.dataPostagem());
+        }
+       
+        if (arquivo != null && !arquivo.isEmpty()) {
+            arquivoSalvo = arquivoService.uploadArquivo(arquivo);
+            arquivoSalvo.setEnviadoPor(autor);
+            arquivoSalvo.setPost(novoPost);
+            novoPost.setArquivo(Arrays.asList(arquivoSalvo));
+        }
+
+        Post postSalvo = postRepo.save(novoPost);
+
+        return postMapper.toResponseDto(postSalvo);
+	}
+	
+	public PostResponseDto buscarPostPorId(Long postId, Long turmaId) {
+	    Optional<Post> post = postRepo.findByIdAndTurmaId(postId, turmaId);
+	    
+	    if (post.isEmpty()) {
+	        throw new EntityNotFoundException("Post não encontrado para a turma especificada.");
+	    }
+
+	    return postMapper.toResponseDto(post.get());
+	}
+	
+	public List<PostResponseDto> listarPostsDaTurma(Long turmaId) {
+		List<Post> posts = postRepo.findPublicadosByTurmaId(turmaId, LocalDateTime.now());
+	    return posts.stream()
+	                .map(postMapper::toResponseDto)
+	                .toList();
+	}
+	
+	public List<PostResponseDto> buscarNaTurmaPeloTitulo(Long turmaId, String titulo) {
+		List<Post> posts = postRepo.buscarPublicadosByTitulo(turmaId, titulo, LocalDateTime.now());
+				return posts.stream()
+						.map(postMapper::toResponseDto)
+						.toList();
+	}
+	
+	public void deletarPost(Long turmaId, Long postId) {
+	    Optional<Post> postExiste = postRepo.findByIdAndTurmaId(postId, turmaId);
+
+	    if (postExiste.isEmpty()) {
+	        throw new EntityNotFoundException("Post não encontrado com o id " + postId);
+	    }
+
+	    postRepo.delete(postExiste.get());
+	}
+}

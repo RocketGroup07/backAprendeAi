@@ -5,6 +5,7 @@ import java.util.List;
 
 import br.com.aprendeai.enums.StatusAtividade;
 import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -34,8 +35,13 @@ public class Atividade {
     private LocalDateTime dataAtividade;
     private  LocalDateTime dataEntrega;
     private boolean entregue;
+    
+    @Column(length = 5000)
     private String conteudo; // talvez o enunciado da atividade?
     private Double nota;
+    
+    @Column(length = 5000)
+    private String feedback;
     
     @ManyToOne
     @JoinColumn(name = "professor_id")
@@ -62,9 +68,10 @@ public class Atividade {
 		this.status = StatusAtividade.ENTREGUE;
 	}
 	
-	public void corrigir(Double nota) {
+	public void corrigir(Double nota, String feedback) {
 		this.nota = nota;
 		this.status = StatusAtividade.CORRIGIDA;
+		this.feedback = feedback;
 	}
 
 }

@@ -2,11 +2,13 @@ package br.com.aprendeai.config;
 
 import java.util.List;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.access.expression.method.DefaultMethodSecurityExpressionHandler;
+import org.springframework.security.access.expression.method.MethodSecurityExpressionHandler;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -18,11 +20,17 @@ import org.springframework.web.cors.CorsConfiguration;
 
 @Configuration
 @EnableWebSecurity
+//@EnableMethodSecurity
 public class SecurityConfiguration {
 	
-	@Autowired
-	private SecurityFilter securityFilter;
+	private final SecurityFilter securityFilter;
+	private final CustomPermissionEvaluator permissionEvaluator;
 	
+	public SecurityConfiguration(SecurityFilter securityFilter, CustomPermissionEvaluator permissionEvaluator) {
+		this.securityFilter = securityFilter;
+		this.permissionEvaluator = permissionEvaluator;
+	}
+
 	private static final String[] USER_URLS = {
 			"/alunos/**",
 			"/posts/**",
@@ -82,5 +90,12 @@ public class SecurityConfiguration {
 	public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration) throws Exception {
 		return authenticationConfiguration.getAuthenticationManager();
 	}
+	
+//	@Bean
+//    public MethodSecurityExpressionHandler methodSecurityExpressionHandler() {
+//        DefaultMethodSecurityExpressionHandler handler = new DefaultMethodSecurityExpressionHandler();
+//        handler.setPermissionEvaluator(permissionEvaluator);
+//        return handler;
+//    }
 	
 }

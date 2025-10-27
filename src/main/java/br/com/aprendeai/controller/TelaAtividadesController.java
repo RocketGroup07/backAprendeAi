@@ -238,7 +238,7 @@ public class TelaAtividadesController {
 						.body("A atividade só pode ser corrigida após ser entregue");
 			}
 			
-			atividade.corrigir(dto.nota());
+			atividade.corrigir(dto.nota(), dto.feedback());
 			atividade.setStatus(StatusAtividade.CORRIGIDA);
 			atividadeRepository.save(atividade);
 			

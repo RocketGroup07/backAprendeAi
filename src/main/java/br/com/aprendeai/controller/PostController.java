@@ -1,6 +1,7 @@
 package br.com.aprendeai.controller;
 
 import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
@@ -50,11 +51,10 @@ public class PostController {
 	}
 
 	@PostMapping("/criar/{usuarioId}/turma/{turmaId}")
-	public ResponseEntity<?> criarPost(@PathVariable Long usuarioId,
+	public PostResponseDto criarPost(@PathVariable Long usuarioId,
 	                      @PathVariable Long turmaId,
 	                      @RequestPart(value = "post") PostCreateDto postRequest, 
 	                      @RequestPart(value = "arquivo", required = false) MultipartFile arquivo) {
-	    try {
 	    	
 	        Usuario autor = userRep.findById(usuarioId)
 	                .orElseThrow(() -> new RuntimeException("Usuário não encontrado."));
@@ -62,44 +62,30 @@ public class PostController {
 	                .orElseThrow(() -> new RuntimeException("Turma não encontrada."));
 
 	        Arquivo arquivoSalvo = null;
-
-	        if (arquivo != null && !arquivo.isEmpty()) {
-	            arquivoSalvo = arquivoService.uploadArquivo(arquivo);
-	            arquivoSalvo.setEnviadoPor(autor);
-	        }
-
+	        
 	        Post novoPost = postMapper.toEntityFromCreateDto(postRequest);
 	        novoPost.setAutor(autor);
 	        novoPost.setTurma(turma);
 	        novoPost.setTitulo(postRequest.titulo()); 
 	        novoPost.setConteudo(postRequest.conteudo());
 	        novoPost.setPublico(postRequest.publico()); 
-	        novoPost.setDataPostagem(LocalDateTime.now());
 	        
-	        if(novoPost.getDataPostagem() == null) {
+	        if(postRequest.dataPostagem() == null) {
 	        	novoPost.setDataPostagem(LocalDateTime.now());
+	        }else {
+	        	novoPost.setDataPostagem(postRequest.dataPostagem());
 	        }
-
-	        if (arquivoSalvo != null) {
-	            novoPost.setPost(arquivoSalvo);
+	       
+	        if (arquivo != null && !arquivo.isEmpty()) {
+	            arquivoSalvo = arquivoService.uploadArquivo(arquivo);
+	            arquivoSalvo.setEnviadoPor(autor);
+	            arquivoSalvo.setPost(novoPost);
+	            novoPost.setArquivo(Arrays.asList(arquivoSalvo));
 	        }
 
 	        Post postSalvo = postRepo.save(novoPost);
-	        
-	        PostResponseDto response = new PostResponseDto(
-	                postSalvo.getId(),
-	                turma.getId(),
-	                postSalvo.getTitulo(),
-	                postSalvo.getConteudo(),
-	                autor.getNome(),
-	                postSalvo.getDataPostagem()
-	        );
 
-	        return ResponseEntity.ok(response);
-
-	    } catch (RuntimeException e) {
-	        return ResponseEntity.badRequest().body(e.getMessage()); 
-	    }
+	        return postMapper.toResponseDto(postSalvo);
 	}
 	
 	@GetMapping("/{postId}/{turmaId}")
@@ -120,24 +106,16 @@ public class PostController {
 
 	@GetMapping("/turma/{turmaId}")
 	public List<PostResponseDto> listarPostsDaTurma(@PathVariable Long turmaId) {
-		List<Post> posts = postRepo.findByTurmaIdAndPublicoTrue(turmaId);
+		List<Post> posts = postRepo.findPublicadosByTurmaId(turmaId, LocalDateTime.now());
 	    return posts.stream()
 	                .map(postMapper::toResponseDto)
 	                .toList();
 	}
-	
-//	@GetMapping("/turma/{turmaId}/{postId}")
-//	public List<Post> listarPostsDaTurma(@PathVariable Long turmaId, @PathVariable Long postId) {
-//	    return postRepo.findByIdAndTurmaId(postId, turmaId);
-//	}
-
 
 	@GetMapping("/turma/{turmaId}/buscar")
 	public List<PostResponseDto> buscarNaTurmaPeloTitulo(@PathVariable Long turmaId,
 	                                @RequestParam String titulo) {
-		List<Post> posts = postRepo.findByTurmaIdAndTituloContainingIgnoreCaseAndPublicoTrueAndDataAgendadaBefore(
-	            turmaId, titulo, LocalDateTime.now()
-	    );
+		List<Post> posts = postRepo.buscarPublicadosByTitulo(turmaId, titulo, LocalDateTime.now());
 	    return posts.stream()
 	                .map(postMapper::toResponseDto)
 	                .toList();
