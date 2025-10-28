@@ -3,6 +3,7 @@ package br.com.aprendeai.controller;
 import br.com.aprendeai.dtos.AtividadeCreateDto;
 import br.com.aprendeai.dtos.AtividadeResponseDto;
 import br.com.aprendeai.dtos.AtividadeSubmitRequestDto;
+import br.com.aprendeai.dtos.AtividadeUpdateDto;
 import br.com.aprendeai.dtos.RequestNotaDto;
 import br.com.aprendeai.enums.ArquivoTipo;
 import br.com.aprendeai.enums.StatusAtividade;
@@ -13,7 +14,6 @@ import br.com.aprendeai.model.Turma;
 import br.com.aprendeai.model.Usuario;
 import br.com.aprendeai.repository.AtividadeRepository;
 import br.com.aprendeai.repository.TurmaRepository;
-import br.com.aprendeai.repository.UsuarioRepository;
 import br.com.aprendeai.service.ArquivoService;
 import br.com.aprendeai.util.AuthenticatedUser;
 import jakarta.persistence.EntityNotFoundException;
@@ -39,22 +39,19 @@ import java.util.Optional;
 @RestController
 @RequestMapping("/atividades")
 @CrossOrigin
-
 public class TelaAtividadesController {
 
     private final AtividadeRepository atividadeRepository;
-    private final UsuarioRepository usuarioRepository;
     private final TurmaRepository turmaRepository;
     private final ArquivoService arquivoService;
     private final AuthenticatedUser authenticatedUser;
     private final AtividadeMapper atividadeMapper;
     private final ObjectMapper objectMapper;
     
-    public TelaAtividadesController(AtividadeRepository atividadeRepository, UsuarioRepository usuarioRepository,
+    public TelaAtividadesController(AtividadeRepository atividadeRepository,
 			TurmaRepository turmaRepository, ArquivoService arquivoService, AuthenticatedUser authenticatedUser,
 			AtividadeMapper atividadeMapper) {
 		this.atividadeRepository = atividadeRepository;
-		this.usuarioRepository = usuarioRepository;
 		this.turmaRepository = turmaRepository;
 		this.arquivoService = arquivoService;
 		this.authenticatedUser = authenticatedUser;
@@ -253,7 +250,7 @@ public class TelaAtividadesController {
     // Atualizar atividade
     @PutMapping("/{id}")
     public ResponseEntity<?> atualizarAtividade(@PathVariable("id") Long id,
-                                                @RequestBody Atividade atividadeAtualizada) {
+                                                @RequestBody AtividadeUpdateDto dto) {
         try {
             Optional<Atividade> atividadeOptional = atividadeRepository.findById(id);
 
@@ -262,11 +259,10 @@ public class TelaAtividadesController {
             }
 
             Atividade atividade = atividadeOptional.get();
-            atividade.setTitulo(atividadeAtualizada.getTitulo());
-            atividade.setDataAtividade(atividadeAtualizada.getDataAtividade());
-            atividade.setDataEntrega(atividadeAtualizada.getDataEntrega());
-            atividade.setEntregue(atividadeAtualizada.isEntregue());
-            atividade.setConteudo(atividadeAtualizada.getConteudo());
+            atividade.setTitulo(dto.titulo());
+            atividade.setDataEntrega(dto.dataEntrega());
+            atividade.setConteudo(dto.conteudo());
+            atividade.setFeedback(dto.feedback());
 
             atividadeRepository.save(atividade);
 

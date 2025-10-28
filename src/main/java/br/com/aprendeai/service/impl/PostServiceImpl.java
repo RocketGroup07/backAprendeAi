@@ -80,6 +80,12 @@ public class PostServiceImpl implements PostService{
 	}
 	
 	public PostResponseDto buscarPostPorId(Long postId, Long turmaId) {
+		
+		Turma turma = turmaRepo.findById(turmaId)
+                .orElseThrow(() -> new EntityNotFoundException("Turma não encontrada."));
+
+        accessControlService.verificarParticipacao(turma);
+		
 	    Optional<Post> post = postRepo.findByIdAndTurmaId(postId, turmaId);
 	    
 	    if (post.isEmpty()) {
@@ -90,6 +96,12 @@ public class PostServiceImpl implements PostService{
 	}
 	
 	public List<PostResponseDto> listarPostsDaTurma(Long turmaId) {
+		
+		Turma turma = turmaRepo.findById(turmaId)
+                .orElseThrow(() -> new EntityNotFoundException("Turma não encontrada."));
+        
+		accessControlService.verificarParticipacao(turma);
+		
 		List<Post> posts = postRepo.findPublicadosByTurmaId(turmaId, LocalDateTime.now());
 	    return posts.stream()
 	                .map(postMapper::toResponseDto)
@@ -97,6 +109,12 @@ public class PostServiceImpl implements PostService{
 	}
 	
 	public List<PostResponseDto> buscarNaTurmaPeloTitulo(Long turmaId, String titulo) {
+		
+		Turma turma = turmaRepo.findById(turmaId)
+                .orElseThrow(() -> new EntityNotFoundException("Turma não encontrada."));
+        
+		accessControlService.verificarParticipacao(turma);
+		
 		List<Post> posts = postRepo.buscarPublicadosByTitulo(turmaId, titulo, LocalDateTime.now());
 				return posts.stream()
 						.map(postMapper::toResponseDto)
@@ -109,6 +127,16 @@ public class PostServiceImpl implements PostService{
 	    if (postExiste.isEmpty()) {
 	        throw new EntityNotFoundException("Post não encontrado com o id " + postId);
 	    }
+	    
+	    Post postParaDeletar = postExiste.get();
+        
+        Usuario usuarioLogado = accessControlService.getUsuarioLogado();
+
+        boolean isAutor = postParaDeletar.getAutor().getId().equals(usuarioLogado.getId());
+        
+        if (!isAutor) {
+            throw new SecurityException("Apenas o professor da turma ou o autor do post podem deletá-lo.");
+        }
 
 	    postRepo.delete(postExiste.get());
 	}

@@ -6,8 +6,8 @@ import org.springframework.core.io.Resource;
 import org.springframework.web.multipart.MultipartFile;
 
 import br.com.aprendeai.dtos.AtividadeResponseDto;
+import br.com.aprendeai.dtos.AtividadeUpdateDto;
 import br.com.aprendeai.dtos.RequestNotaDto;
-import br.com.aprendeai.model.Atividade;
 
 public interface AtividadeService {
 	
@@ -21,7 +21,7 @@ public interface AtividadeService {
 	
 	public AtividadeResponseDto corrigirAtividade(Long atividadeId, RequestNotaDto dto);
 	
-	public AtividadeResponseDto atualizarAtividade(Long id, Atividade atividadeAtualizada);
+	public AtividadeResponseDto atualizarAtividade(Long id, AtividadeUpdateDto atividadeAtualizada);
 	
 	public void deletarAtividade(Long id);
 

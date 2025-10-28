@@ -23,7 +23,7 @@ import br.com.aprendeai.repository.UsuarioRepository;
 import io.swagger.v3.oas.annotations.parameters.RequestBody;
 
 @RestController
-@RequestMapping("comentarios/")
+@RequestMapping("/comentarios")
 @CrossOrigin
 public class ComentarioController {
 

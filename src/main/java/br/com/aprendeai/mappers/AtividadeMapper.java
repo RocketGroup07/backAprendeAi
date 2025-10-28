@@ -10,6 +10,7 @@ import org.mapstruct.ReportingPolicy;
 
 import br.com.aprendeai.dtos.AtividadeCreateDto;
 import br.com.aprendeai.dtos.AtividadeResponseDto;
+import br.com.aprendeai.dtos.AtividadeUpdateDto;
 import br.com.aprendeai.model.Arquivo;
 import br.com.aprendeai.model.Atividade;
 
@@ -24,6 +25,8 @@ public interface AtividadeMapper {
 	Atividade toEntityFromCreateDto(AtividadeCreateDto atividadeCreateDto);
 	
 	Atividade updateEntityFromCreateDto(@MappingTarget Atividade atividade, AtividadeCreateDto atividadeCreateDto);
+	
+	Atividade updateEntityFromUpdateDto(@MappingTarget Atividade atividade, AtividadeUpdateDto atividadeUpdateDto);
 	
 	default List<String> mapArquivosParaNomes(List<Arquivo> arquivos){
 		if(arquivos == null) return null;

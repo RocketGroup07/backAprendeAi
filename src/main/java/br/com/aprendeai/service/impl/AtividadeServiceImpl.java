@@ -4,6 +4,7 @@ import br.com.aprendeai.config.AccessControlService;
 import br.com.aprendeai.dtos.AtividadeCreateDto;
 import br.com.aprendeai.dtos.AtividadeResponseDto;
 import br.com.aprendeai.dtos.AtividadeSubmitRequestDto;
+import br.com.aprendeai.dtos.AtividadeUpdateDto;
 import br.com.aprendeai.dtos.RequestNotaDto;
 import br.com.aprendeai.enums.ArquivoTipo;
 import br.com.aprendeai.enums.StatusAtividade;
@@ -102,6 +103,10 @@ public class AtividadeServiceImpl implements AtividadeService {
 
     public Resource baixarAnexo(Long atividadeId) {
         Atividade atividade = buscarAtividadeId(atividadeId);
+        
+        Turma turma = atividade.getTurma();
+        
+        accessControlService.verificarParticipacao(turma);
 
         if (atividade.getArquivoAnexo() == null || atividade.getArquivoAnexo().isEmpty()) {
             throw new EntityNotFoundException("Nenhum anexo encontrado para esta atividade.");
@@ -160,14 +165,13 @@ public class AtividadeServiceImpl implements AtividadeService {
         return atividadeMapper.toResponseDTO(atividade);
     }
 
-    public AtividadeResponseDto atualizarAtividade(Long id, Atividade atividadeAtualizada) {
+    public AtividadeResponseDto atualizarAtividade(Long id, AtividadeUpdateDto dto) {
         Atividade atividade = buscarAtividadeId(id);
 
-        atividade.setTitulo(atividadeAtualizada.getTitulo());
-        atividade.setDataAtividade(atividadeAtualizada.getDataAtividade());
-        atividade.setDataEntrega(atividadeAtualizada.getDataEntrega());
-        atividade.setEntregue(atividadeAtualizada.isEntregue());
-        atividade.setConteudo(atividadeAtualizada.getConteudo());
+        atividade.setTitulo(dto.titulo());
+        atividade.setDataEntrega(dto.dataEntrega());
+        atividade.setConteudo(dto.conteudo());
+        atividade.setFeedback(dto.feedback());
 
         atividadeRepository.save(atividade);
         return atividadeMapper.toResponseDTO(atividade);

@@ -7,7 +7,6 @@ import java.util.List;
 
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
-import br.com.aprendeai.config.AdminInitializer;
 import br.com.aprendeai.dtos.RequestCodigoTurmaDTO;
 import br.com.aprendeai.dtos.TurmaCreateDto;
 import br.com.aprendeai.dtos.TurmaResponseDto;
@@ -25,8 +24,6 @@ import jakarta.transaction.Transactional;
 
 @Service
 public class TurmaServiceImpl implements TurmaService{
-
-    private final AdminInitializer adminInitializer;
 	
 	private final UsuarioRepository usuarioRepository;
     private final TurmaRepository turmaRepository;
@@ -34,12 +31,11 @@ public class TurmaServiceImpl implements TurmaService{
     private final AuthenticatedUser authenticatedUser;
     
     public TurmaServiceImpl(UsuarioRepository usuarioRepository, TurmaRepository turmaRepository,
-			TurmaMapper turmaMapper, AuthenticatedUser authenticatedUser, AdminInitializer adminInitializer) {
+			TurmaMapper turmaMapper, AuthenticatedUser authenticatedUser) {
 		this.usuarioRepository = usuarioRepository;
 		this.turmaRepository = turmaRepository;
 		this.turmaMapper = turmaMapper;
 		this.authenticatedUser = authenticatedUser;
-		this.adminInitializer = adminInitializer;
 	}
 
 	@Override
@@ -113,10 +109,6 @@ public class TurmaServiceImpl implements TurmaService{
     	verificarAcessoProfessor(turma);
         turmaRepository.deleteById(id);
     }
-	
-//    public boolean validarCodigo(RequestCodigoTurmaDTO codigoTurma) {
-//        return turmaRepository.findByCodigo(codigoTurma.codigoTurma()).isPresent();
-//    }
 
     @Override
     @Transactional

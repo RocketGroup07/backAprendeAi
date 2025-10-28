@@ -35,7 +35,8 @@ public class SecurityConfiguration {
 			"/alunos/**",
 			"/posts/**",
 			"/favoritos/**",
-			"/atividades/**"
+			"/atividades/**",
+			"/comentarios/**"
 	};
 	
 	private static final String[] PERMIT_URLS = {

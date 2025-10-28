@@ -1,13 +1,15 @@
 package br.com.aprendeai.dtos;
 
 import java.time.LocalDateTime;
-import java.util.List;
+
+import jakarta.validation.constraints.Size;
 
 public record AtividadeUpdateDto(
 		String titulo,
 		LocalDateTime dataEntrega,
+		@Size(max = 5000)
 		String conteudo,
-		List<Long> arquivosAnexosIds
+		String feedback
 		) {
 
 }
