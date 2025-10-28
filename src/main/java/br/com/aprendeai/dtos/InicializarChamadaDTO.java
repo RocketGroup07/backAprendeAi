@@ -5,5 +5,6 @@ import java.time.LocalDate;
 public record InicializarChamadaDTO(
         Long turmaId,
         LocalDate dataAula,
+        String conteudo,
         Integer horasMaximas
 ) {}

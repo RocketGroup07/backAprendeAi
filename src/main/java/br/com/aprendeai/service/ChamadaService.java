@@ -35,11 +35,31 @@ public class ChamadaService {
             throw new IllegalArgumentException("Horas máximas devem ser maiores que zero");
         }
 
+        // Busca dia de aula existente ou cria novo corretamente
         DiaAula diaAula = diaAulaRepository.findByTurmaIdAndDataAula(dto.turmaId(), dto.dataAula())
-                .orElseGet(() -> diaAulaRepository.save(new DiaAula(dto.dataAula(), dto.horasMaximas(), turma)));
+                .map(existente -> {
+                    // Atualiza as horas do dia caso tenha mudado
+                    if (!existente.getHorasMaximas().equals(dto.horasMaximas())) {
+                        existente.setHorasMaximas(dto.horasMaximas());
+                        existente.setHorasTotais(dto.horasMaximas());
+                        diaAulaRepository.save(existente);
+                    }
+                    return existente;
+                })
+                .orElseGet(() -> {
+                    DiaAula novoDia = new DiaAula();
+                    novoDia.setTurma(turma);
+                    novoDia.setDataAula(dto.dataAula());
+                    novoDia.setConteudo(dto.conteudo());
+                    novoDia.setHorasMaximas(dto.horasMaximas());
+                    novoDia.setHorasTotais(dto.horasMaximas());
+                    return diaAulaRepository.save(novoDia);
+                });
+
 
         List<Usuario> alunos = turma.getAlunos().stream().toList();
 
+        // Cria presenças apenas se ainda não existirem
         List<Presenca> presencasExistentes = presencaRepository.findByDiaAulaId(diaAula.getId());
         if (presencasExistentes.isEmpty()) {
             presencasExistentes = alunos.stream()
@@ -55,7 +75,7 @@ public class ChamadaService {
 
     // Atualiza a presença individual de um aluno
     @Transactional
-    public PresencaDTO atualizarPresenca(Long presencaId, Integer horasPresente) {
+    public PresencaDTO atualizarPresenca(Long presencaId, int horasPresente) {
         Presenca presenca = presencaRepository.findById(presencaId)
                 .orElseThrow(() -> new EntityNotFoundException("Presença não encontrada"));
 

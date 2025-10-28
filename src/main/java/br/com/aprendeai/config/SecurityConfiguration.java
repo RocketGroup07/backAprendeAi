@@ -48,7 +48,7 @@ public class SecurityConfiguration {
 	        "/swagger-ui.html", 
 	        "/swagger-ui/**",
 	        "/v3/api-docs/**",
-	        "/api/**"
+	        "/api/chamada/**"
 	};
 	
 	private static final String[] ADMIN_URLS = {
