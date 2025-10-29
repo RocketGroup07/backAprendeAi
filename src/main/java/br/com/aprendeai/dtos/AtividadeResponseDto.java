@@ -9,6 +9,7 @@ public record AtividadeResponseDto(
 		Long id,
 	    String titulo,
 	    String conteudo,
+	    LocalDateTime dataAtividade,
 	    LocalDateTime dataEntrega,
 	    boolean entregue,
 	    String professorNome,
