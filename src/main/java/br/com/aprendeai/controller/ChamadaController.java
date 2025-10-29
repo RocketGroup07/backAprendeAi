@@ -7,7 +7,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/chamada")
-@CrossOrigin(origins = "*")
+@CrossOrigin
 public class ChamadaController {
 
     private final ChamadaService chamadaService;
@@ -32,8 +32,8 @@ public class ChamadaController {
      */
     @PatchMapping("/presenca/{id}")
     public PresencaDTO atualizarPresenca(@PathVariable Long id,
-                                         @RequestParam Integer horasPresente) {
-        return chamadaService.atualizarPresenca(id, horasPresente);
+                                         @RequestBody HorasPresentesSubmitDto dto) {
+        return chamadaService.atualizarPresenca(id, dto.horasPresentes());
     }
 
     /**
