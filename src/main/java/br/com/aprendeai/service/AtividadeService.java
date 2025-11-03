@@ -17,12 +17,14 @@ public interface AtividadeService {
 	
 	public Resource baixarAnexo(Long atividadeId);
 	
-	public AtividadeResponseDto entregarAtividade(Long atividadeId, String respostaJson, MultipartFile arquivo);
+	public AtividadeResponseDto entregarAtividade(Long atividadeId, String resposta, MultipartFile arquivo);
 	
 	public AtividadeResponseDto corrigirAtividade(Long atividadeId, RequestNotaDto dto);
 	
 	public AtividadeResponseDto atualizarAtividade(Long id, AtividadeUpdateDto atividadeAtualizada);
 	
 	public void deletarAtividade(Long id);
+
+	AtividadeResponseDto buscarPorId(Long atividadeId);
 
 }

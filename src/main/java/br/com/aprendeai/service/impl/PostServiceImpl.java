@@ -22,6 +22,7 @@ import br.com.aprendeai.repository.UsuarioRepository;
 import br.com.aprendeai.service.ArquivoService;
 import br.com.aprendeai.service.PostService;
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.transaction.Transactional;
 
 @Service
 public class PostServiceImpl implements PostService{
@@ -43,6 +44,8 @@ public class PostServiceImpl implements PostService{
 		this.accessControlService = accessControlService;
 	}
 	
+	@Override
+	@Transactional
 	public PostResponseDto criarPost(Long usuarioId, Long turmaId, PostCreateDto postRequest, MultipartFile arquivo) {
 		
 		Usuario autor = userRep.findById(usuarioId)
@@ -79,6 +82,8 @@ public class PostServiceImpl implements PostService{
         return postMapper.toResponseDto(postSalvo);
 	}
 	
+	@Override
+	@Transactional
 	public PostResponseDto buscarPostPorId(Long postId, Long turmaId) {
 		
 		Turma turma = turmaRepo.findById(turmaId)
@@ -95,6 +100,8 @@ public class PostServiceImpl implements PostService{
 	    return postMapper.toResponseDto(post.get());
 	}
 	
+	@Override
+	@Transactional
 	public List<PostResponseDto> listarPostsDaTurma(Long turmaId) {
 		
 		Turma turma = turmaRepo.findById(turmaId)
@@ -108,6 +115,8 @@ public class PostServiceImpl implements PostService{
 	                .toList();
 	}
 	
+	@Override
+	@Transactional
 	public List<PostResponseDto> buscarNaTurmaPeloTitulo(Long turmaId, String titulo) {
 		
 		Turma turma = turmaRepo.findById(turmaId)
@@ -121,6 +130,8 @@ public class PostServiceImpl implements PostService{
 						.toList();
 	}
 	
+	@Override
+	@Transactional
 	public void deletarPost(Long turmaId, Long postId) {
 	    Optional<Post> postExiste = postRepo.findByIdAndTurmaId(postId, turmaId);
 

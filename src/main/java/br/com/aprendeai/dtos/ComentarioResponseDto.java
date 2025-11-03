@@ -5,7 +5,7 @@ import java.time.LocalDateTime;
 public record ComentarioResponseDto(
 		Long id,
 	    String conteudo,
-	    String autor,
+	    String usuario,
 	    LocalDateTime dataComentario) {
 
 }

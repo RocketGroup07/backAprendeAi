@@ -21,6 +21,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.transaction.Transactional;
+
 import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -57,6 +59,8 @@ public class AtividadeServiceImpl implements AtividadeService {
         this.objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
     }
 
+    @Override
+    @Transactional
     public AtividadeResponseDto criarAtividade(Long turmaId, String Atividade, MultipartFile arquivo) {
         try {
             AtividadeCreateDto dto = objectMapper.readValue(Atividade, AtividadeCreateDto.class);
@@ -91,6 +95,8 @@ public class AtividadeServiceImpl implements AtividadeService {
         }
     }
 
+    @Override
+    @Transactional
     public List<AtividadeResponseDto> listarAtividades(Long turmaId) {
         Turma turma = buscarTurmaId(turmaId);
         accessControlService.verificarParticipacao(turma);
@@ -100,7 +106,16 @@ public class AtividadeServiceImpl implements AtividadeService {
                 .map(atividadeMapper::toResponseDTO)
                 .toList();
     }
+    
+    @Override
+    @Transactional
+    public AtividadeResponseDto buscarPorId(Long atividadeId) {
+    	Atividade atividade = buscarAtividadeId(atividadeId);
+    	return atividadeMapper.toResponseDTO(atividade);
+    }
 
+    @Override
+    @Transactional
     public Resource baixarAnexo(Long atividadeId) {
         Atividade atividade = buscarAtividadeId(atividadeId);
         
@@ -116,7 +131,9 @@ public class AtividadeServiceImpl implements AtividadeService {
         return arquivoService.downloadArquivo(arquivo.getId());
     }
 
-    public AtividadeResponseDto entregarAtividade(Long atividadeId, String respostaJson, MultipartFile arquivo) {
+    @Override
+    @Transactional
+    public AtividadeResponseDto entregarAtividade(Long atividadeId, String resposta, MultipartFile arquivo) {
         try {
             Atividade atividade = buscarAtividadeId(atividadeId);
             Turma turma = atividade.getTurma();
@@ -124,7 +141,7 @@ public class AtividadeServiceImpl implements AtividadeService {
 
             Usuario aluno = accessControlService.getUsuarioLogado();
 
-            AtividadeSubmitRequestDto dto = objectMapper.readValue(respostaJson, AtividadeSubmitRequestDto.class);
+            AtividadeSubmitRequestDto dto = objectMapper.readValue(resposta, AtividadeSubmitRequestDto.class);
 
             if (arquivo != null && !arquivo.isEmpty()) {
                 Arquivo arquivoEntrega = arquivoService.uploadArquivo(arquivo);
@@ -149,6 +166,8 @@ public class AtividadeServiceImpl implements AtividadeService {
         }
     }
 
+    @Override
+    @Transactional
     public AtividadeResponseDto corrigirAtividade(Long atividadeId, RequestNotaDto dto) {
         Atividade atividade = buscarAtividadeId(atividadeId);
         Turma turma = atividade.getTurma();
@@ -165,6 +184,8 @@ public class AtividadeServiceImpl implements AtividadeService {
         return atividadeMapper.toResponseDTO(atividade);
     }
 
+    @Override
+    @Transactional
     public AtividadeResponseDto atualizarAtividade(Long id, AtividadeUpdateDto dto) {
         Atividade atividade = buscarAtividadeId(id);
 
@@ -177,6 +198,8 @@ public class AtividadeServiceImpl implements AtividadeService {
         return atividadeMapper.toResponseDTO(atividade);
     }
 
+    @Override
+    @Transactional
     public void deletarAtividade(Long id) {
         if (!atividadeRepository.existsById(id)) {
             throw new EntityNotFoundException("Atividade não encontrada.");

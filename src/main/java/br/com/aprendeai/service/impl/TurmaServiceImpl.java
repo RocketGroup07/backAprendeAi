@@ -7,6 +7,7 @@ import java.util.List;
 
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
+import br.com.aprendeai.config.AccessControlService;
 import br.com.aprendeai.dtos.RequestCodigoTurmaDTO;
 import br.com.aprendeai.dtos.TurmaCreateDto;
 import br.com.aprendeai.dtos.TurmaResponseDto;
@@ -18,7 +19,6 @@ import br.com.aprendeai.model.Usuario;
 import br.com.aprendeai.repository.TurmaRepository;
 import br.com.aprendeai.repository.UsuarioRepository;
 import br.com.aprendeai.service.TurmaService;
-import br.com.aprendeai.util.AuthenticatedUser;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 
@@ -28,20 +28,21 @@ public class TurmaServiceImpl implements TurmaService{
 	private final UsuarioRepository usuarioRepository;
     private final TurmaRepository turmaRepository;
     private final TurmaMapper turmaMapper;
-    private final AuthenticatedUser authenticatedUser;
+    private final AccessControlService accessControl;
     
     public TurmaServiceImpl(UsuarioRepository usuarioRepository, TurmaRepository turmaRepository,
-			TurmaMapper turmaMapper, AuthenticatedUser authenticatedUser) {
+			TurmaMapper turmaMapper, AccessControlService accessControl) {
+		super();
 		this.usuarioRepository = usuarioRepository;
 		this.turmaRepository = turmaRepository;
 		this.turmaMapper = turmaMapper;
-		this.authenticatedUser = authenticatedUser;
+		this.accessControl = accessControl;
 	}
 
 	@Override
     @Transactional
     public TurmaResponseDto criarTurma(TurmaCreateDto dto) {
-		Usuario professorAutenticado = authenticatedUser.getCurrentUser();
+		Usuario professorAutenticado = accessControl.getUsuarioLogado();
 		
 		if(!professorAutenticado.getPapel().equals(PapelEnum.ADMIN)) {
 			throw new AccessDeniedException("Apenas usuários ADMIN podem criar turmas.");
@@ -66,11 +67,11 @@ public class TurmaServiceImpl implements TurmaService{
     @Override           
     @Transactional
     public TurmaResponseDto buscarPorId(Long id) {
-    	Usuario usuario = getUsuarioLogado();
+    	Usuario usuario = accessControl.getUsuarioLogado();
     	
     	Turma turma = buscarTurmaId(id);
     	
-    	if (!usuarioParticipaDaTurma(usuario, turma)) {
+    	if (!accessControl.usuarioParticipaDaTurma(usuario, turma)) {
             throw new AccessDeniedException("Você não tem permissão para acessar essa turma.");
         }
        
@@ -80,13 +81,13 @@ public class TurmaServiceImpl implements TurmaService{
     @Override
     @Transactional
     public List<TurmaResponseDto> listarTodas() {
-    	Usuario usuario = getUsuarioLogado();
+    	Usuario usuario = accessControl.getUsuarioLogado();
 
     	System.out.println("======================================================");
     	System.out.println("Encontrando turma do sistema....");
     	
         return turmaRepository.findAll().stream()
-                .filter(t -> usuarioParticipaDaTurma(usuario, t))
+                .filter(t -> accessControl.usuarioParticipaDaTurma(usuario, t))
                 .map(turmaMapper::toResponseDto)
                 .toList();
     }
@@ -95,7 +96,7 @@ public class TurmaServiceImpl implements TurmaService{
     @Transactional
     public TurmaResponseDto atualizar(Long id, TurmaUpdateDto dto) {
         Turma turma = buscarTurmaId(id);
-        verificarAcessoProfessor(turma); 
+        accessControl.verificarAcessoProfessor(turma);
         turmaMapper.updateEntityFromUpdateDto(turma, dto);
         Turma atualizada = turmaRepository.save(turma);
 
@@ -106,7 +107,7 @@ public class TurmaServiceImpl implements TurmaService{
     @Transactional
     public void deletar(Long id) {
     	Turma turma = buscarTurmaId(id);
-    	verificarAcessoProfessor(turma);
+    	accessControl.verificarAcessoProfessor(turma);
         turmaRepository.deleteById(id);
     }
 
@@ -115,7 +116,7 @@ public class TurmaServiceImpl implements TurmaService{
     public TurmaResponseDto clonarTurma(Long id) {
         Turma original = buscarTurmaId(id);
         
-        verificarAcessoProfessor(original); 
+        accessControl.verificarAcessoProfessor(original); 
 
         Turma clone = new Turma();
         clone.setNome(original.getNome() + " (Cópia)");
@@ -133,7 +134,7 @@ public class TurmaServiceImpl implements TurmaService{
     public TurmaResponseDto adicionarAluno(RequestCodigoTurmaDTO codigo, Long alunoId) {
         Turma turma = turmaRepository.findByCodigo(codigo.codigoTurma())
                 .orElseThrow(() -> new EntityNotFoundException("Turma não encontrada."));
-        verificarAcessoProfessor(turma);
+        accessControl.verificarAcessoProfessor(turma);
 
         Usuario aluno = buscarUsuarioId(alunoId);
         
@@ -149,7 +150,9 @@ public class TurmaServiceImpl implements TurmaService{
     @Transactional
     public TurmaResponseDto removerAluno(Long turmaId, Long alunoId) {
         Turma turma = buscarTurmaId(turmaId);
-
+        
+        accessControl.verificarAcessoProfessor(turma);
+        
         Usuario aluno = buscarUsuarioId(alunoId);
 
         if (!turma.getAlunos().contains(aluno)) {
@@ -174,25 +177,6 @@ public class TurmaServiceImpl implements TurmaService{
         } while (turmaRepository.existsByCodigo(codigo));
 
         return codigo;
-    }
-    
-    private void verificarAcessoProfessor(Turma turma) {
-        Usuario usuarioAutenticado = authenticatedUser.getCurrentUser();
-        
-        if (!turma.getProfessor().getId().equals(usuarioAutenticado.getId())) {
-            throw new SecurityException("Apenas o professor da turma pode executar esta ação.");
-        }
-    }
-    
-    private Usuario getUsuarioLogado() {
-        return authenticatedUser.getCurrentUser();
-    }
-    
-    private boolean usuarioParticipaDaTurma(Usuario usuario, Turma turma) {
-    	System.out.println("======================= ABAIXO ===========================");
-    	System.out.println(turma.getProfessor().getId().equals(usuario.getId()));
-    	
-        return turma.getProfessor().getId().equals(usuario.getId()) || turma.getAlunos().contains(usuario);
     }
     
     private Turma buscarTurmaId(Long id) {

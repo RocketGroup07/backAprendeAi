@@ -10,6 +10,6 @@ import br.com.aprendeai.model.Comentario;
 @Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface ComentarioMapper {
 
-	@Mapping(source = "usuario.nome", target = "autor")
+	@Mapping(source = "usuario.nome", target = "usuario")
     ComentarioResponseDto toResponseDto(Comentario comentario);
 }

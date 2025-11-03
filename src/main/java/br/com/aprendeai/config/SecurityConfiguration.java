@@ -4,11 +4,8 @@ import java.util.List;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.access.expression.method.DefaultMethodSecurityExpressionHandler;
-import org.springframework.security.access.expression.method.MethodSecurityExpressionHandler;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
-import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -20,40 +17,40 @@ import org.springframework.web.cors.CorsConfiguration;
 
 @Configuration
 @EnableWebSecurity
-//@EnableMethodSecurity
 public class SecurityConfiguration {
 	
 	private final SecurityFilter securityFilter;
-	private final CustomPermissionEvaluator permissionEvaluator;
 	
-	public SecurityConfiguration(SecurityFilter securityFilter, CustomPermissionEvaluator permissionEvaluator) {
+	public SecurityConfiguration(SecurityFilter securityFilter) {
 		this.securityFilter = securityFilter;
-		this.permissionEvaluator = permissionEvaluator;
 	}
 
 	private static final String[] USER_URLS = {
 			"/alunos/**",
 			"/posts/**",
+			"/comentarios/**",
 			"/favoritos/**",
 			"/atividades/**",
-			"/comentarios/**"
+			"/comentarios/**",
+			"/api/arquivos/**",
+			"/api/**"
 	};
 	
 	private static final String[] PERMIT_URLS = {
 			"/login/",
 			"/alunos/cadastro-com-turma",
 			"/alunos/cadastrar",
-			"/api/arquivos/**",
 	        "/turmas/validar-codigo",
 	        "/swagger-ui.html", 
 	        "/swagger-ui/**",
 	        "/v3/api-docs/**",
-	        "/api/chamada/**"
+	        "/redefinicao/**"
 	};
 	
 	private static final String[] ADMIN_URLS = {
 			"/professores/**",
-			"/turmas/**"
+			"/turmas/**",
+			"/api/chamada/**"
 	};
 	
 	
@@ -91,12 +88,5 @@ public class SecurityConfiguration {
 	public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration) throws Exception {
 		return authenticationConfiguration.getAuthenticationManager();
 	}
-	
-//	@Bean
-//    public MethodSecurityExpressionHandler methodSecurityExpressionHandler() {
-//        DefaultMethodSecurityExpressionHandler handler = new DefaultMethodSecurityExpressionHandler();
-//        handler.setPermissionEvaluator(permissionEvaluator);
-//        return handler;
-//    }
 	
 }

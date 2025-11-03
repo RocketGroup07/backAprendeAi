@@ -13,7 +13,7 @@ import br.com.aprendeai.dtos.PostResponseDto;
 import br.com.aprendeai.model.Arquivo;
 import br.com.aprendeai.model.Post;
 
-@Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
+@Mapper(componentModel = "spring", uses = {ComentarioMapper.class},unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface PostMapper {
 	
 	@Mapping(source = "id", target = "postId")

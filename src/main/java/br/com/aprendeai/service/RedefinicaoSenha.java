@@ -1,11 +1,7 @@
 package br.com.aprendeai.service;
 
-import org.springframework.stereotype.Service;
-
 public interface RedefinicaoSenha {
-	
-	void solicitarRedefinicao(String email, String codigo);
-
+    void solicitarRedefinicao(String email);
     boolean validarCodigo(String email, String codigo);
-
+    boolean redefinirSenha(String email, String novaSenha);
 }
