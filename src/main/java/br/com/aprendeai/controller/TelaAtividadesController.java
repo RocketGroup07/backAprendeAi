@@ -67,7 +67,7 @@ public class TelaAtividadesController {
     @PutMapping("/{id}")
     public ResponseEntity<?> atualizarAtividade(@PathVariable("id") Long id,
                                                 @RequestBody AtividadeUpdateDto atividadeAtualizada) {
-        return ResponseEntity.ok(atividadeService.atualizarAtividade(id, atividadeAtualizada));
+    	return ResponseEntity.ok(atividadeService.atualizarAtividade(id, atividadeAtualizada));
     }
 
     // Deletar atividade
