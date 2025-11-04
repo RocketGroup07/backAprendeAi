@@ -2,8 +2,10 @@ package br.com.aprendeai.service.impl;
 
 import java.security.SecureRandom;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
@@ -13,9 +15,13 @@ import br.com.aprendeai.dtos.TurmaCreateDto;
 import br.com.aprendeai.dtos.TurmaResponseDto;
 import br.com.aprendeai.dtos.TurmaUpdateDto;
 import br.com.aprendeai.enums.PapelEnum;
+import br.com.aprendeai.enums.StatusAtividade;
 import br.com.aprendeai.mappers.TurmaMapper;
+import br.com.aprendeai.model.Arquivo;
+import br.com.aprendeai.model.Atividade;
 import br.com.aprendeai.model.Turma;
 import br.com.aprendeai.model.Usuario;
+import br.com.aprendeai.repository.AtividadeRepository;
 import br.com.aprendeai.repository.TurmaRepository;
 import br.com.aprendeai.repository.UsuarioRepository;
 import br.com.aprendeai.service.TurmaService;
@@ -29,14 +35,16 @@ public class TurmaServiceImpl implements TurmaService{
     private final TurmaRepository turmaRepository;
     private final TurmaMapper turmaMapper;
     private final AccessControlService accessControl;
-    
-    public TurmaServiceImpl(UsuarioRepository usuarioRepository, TurmaRepository turmaRepository,
-			TurmaMapper turmaMapper, AccessControlService accessControl) {
+    private final AtividadeRepository atividadeRepository;
+
+	public TurmaServiceImpl(UsuarioRepository usuarioRepository, TurmaRepository turmaRepository,
+			TurmaMapper turmaMapper, AccessControlService accessControl, AtividadeRepository atividadeRepository) {
 		super();
 		this.usuarioRepository = usuarioRepository;
 		this.turmaRepository = turmaRepository;
 		this.turmaMapper = turmaMapper;
 		this.accessControl = accessControl;
+		this.atividadeRepository = atividadeRepository;
 	}
 
 	@Override
@@ -111,6 +119,24 @@ public class TurmaServiceImpl implements TurmaService{
         turmaRepository.deleteById(id);
     }
 
+//    @Override
+//    @Transactional
+//    public TurmaResponseDto clonarTurma(Long id) {
+//        Turma original = buscarTurmaId(id);
+//        
+//        accessControl.verificarAcessoProfessor(original); 
+//
+//        Turma clone = new Turma();
+//        clone.setNome(original.getNome() + " (Cópia)");
+//        clone.setLimiteAlunos(0);
+//        clone.setProfessor(original.getProfessor());
+//        clone.setCodigo(gerarCodigoUnico());
+//        clone.setCriadoEm(LocalDateTime.now());
+//        clone.setAlunos(new HashSet<>());
+//
+//        return turmaMapper.toResponseDto(turmaRepository.save(clone));
+//    }
+    
     @Override
     @Transactional
     public TurmaResponseDto clonarTurma(Long id) {
@@ -121,13 +147,56 @@ public class TurmaServiceImpl implements TurmaService{
         Turma clone = new Turma();
         clone.setNome(original.getNome() + " (Cópia)");
         clone.setLimiteAlunos(0);
-        clone.setProfessor(original.getProfessor());
         clone.setCodigo(gerarCodigoUnico());
+        clone.setCargaHorariaTotal(original.getCargaHorariaTotal());
+        clone.setProfessor(original.getProfessor());
         clone.setCriadoEm(LocalDateTime.now());
         clone.setAlunos(new HashSet<>());
 
-        return turmaMapper.toResponseDto(turmaRepository.save(clone));
+        // Clonar atividades
+        List<Atividade> atividadesClonadas = original.getAtividades().stream()
+        	    .map(atividadeOriginal -> {
+        	        Atividade atividadeClone = new Atividade();
+        	        atividadeClone.setTitulo(atividadeOriginal.getTitulo());
+        	        atividadeClone.setDataAtividade(atividadeOriginal.getDataAtividade());
+        	        atividadeClone.setDataEntrega(atividadeOriginal.getDataEntrega());
+        	        atividadeClone.setEntregue(false);
+        	        atividadeClone.setConteudo(atividadeOriginal.getConteudo());
+        	        atividadeClone.setNota(null);
+        	        atividadeClone.setFeedback(null);
+        	        atividadeClone.setProfessor(atividadeOriginal.getProfessor());
+        	        atividadeClone.setTurma(clone);
+        	        atividadeClone.setResposta(null);
+        	        atividadeClone.setStatus(StatusAtividade.PENDENTE);
+
+        	        // Clonar arquivos anexos
+        	        List<Arquivo> anexosClonados = atividadeOriginal.getArquivoAnexo().stream()
+        	            .map(arquivoOriginal -> {
+        	                Arquivo arquivoClone = new Arquivo();
+        	                arquivoClone.setNomeArquivo(arquivoOriginal.getNomeArquivo());
+        	                arquivoClone.setCaminhoArquivo(arquivoOriginal.getCaminhoArquivo());
+        	                // outros campos...
+        	                return arquivoClone;
+        	            }).collect(Collectors.toList());
+        	        atividadeClone.setArquivoAnexo(anexosClonados);
+
+        	        // Entregas devem ser nulas ou vazias
+        	        atividadeClone.setArquivosEntrega(new ArrayList<>());
+
+        	        return atividadeClone;
+        	    }).collect(Collectors.toList());
+
+
+        clone.setAtividades(atividadesClonadas);
+
+        // Salvar turma e atividades
+        Turma turmaSalva = turmaRepository.save(clone);
+        atividadeRepository.saveAll(atividadesClonadas);
+
+        return turmaMapper.toResponseDto(turmaSalva);
     }
+
+
 
     @Override
     @Transactional
