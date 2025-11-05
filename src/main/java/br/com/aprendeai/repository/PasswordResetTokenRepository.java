@@ -17,4 +17,6 @@ public interface PasswordResetTokenRepository extends JpaRepository<PasswordRese
 
 	PasswordResetToken findByUserAndToken(Usuario user, String codigo);
 
+	public PasswordResetToken findByUser(Usuario usuario);
+
 }

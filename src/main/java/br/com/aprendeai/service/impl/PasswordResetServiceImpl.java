@@ -39,13 +39,14 @@ public class PasswordResetServiceImpl implements RedefinicaoSenha {
         Usuario user = encontrarPeloLogin(email);
 
         String otp = OtpGenerator.generateOtp();
+        String hashedOtp = passwordEncoder.encode(otp);
         LocalDateTime expiryDate = LocalDateTime.now().plusMinutes(EXPIRATION_MINUTES);
 
         // Remove tokens antigos do usuário
         tokenRepository.deleteByUser(user);
 
         PasswordResetToken token = new PasswordResetToken();
-        token.setToken(otp);
+        token.setToken(hashedOtp);
         token.setUser(user);
         token.setExpiryDate(expiryDate);
         tokenRepository.save(token);
@@ -58,15 +59,15 @@ public class PasswordResetServiceImpl implements RedefinicaoSenha {
 
     @Override
     public boolean validarCodigo(String email, String codigo) {
-        Usuario user = encontrarPeloLogin(email);
+    	Usuario usuario = userRepository.findByLogin(email);
+    	PasswordResetToken token = tokenRepository.findByUser(usuario);
 
-        PasswordResetToken token = tokenRepository.findByUserAndToken(user, codigo);
+    	if (token == null || token.isExpired()) {
+    	    return false;
+    	}
 
-        if (token == null || token.isExpired()) {
-            return false;
-        }
-
-        return true;
+    	boolean isValid = passwordEncoder.matches(codigo, token.getToken());
+    	return isValid;
     }
 
     @Override

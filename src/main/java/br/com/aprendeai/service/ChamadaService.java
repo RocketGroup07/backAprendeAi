@@ -1,5 +1,6 @@
 package br.com.aprendeai.service;
 
+import br.com.aprendeai.config.AccessControlService;
 import br.com.aprendeai.dtos.*;
 import br.com.aprendeai.model.*;
 import br.com.aprendeai.repository.*;
@@ -16,20 +17,24 @@ public class ChamadaService {
     private final DiaAulaRepository diaAulaRepository;
     private final PresencaRepository presencaRepository;
     private final TurmaRepository turmaRepository;
+    private final AccessControlService accessControl;
 
-    public ChamadaService(DiaAulaRepository diaAulaRepository,
-                          PresencaRepository presencaRepository,
-                          TurmaRepository turmaRepository) {
-        this.diaAulaRepository = diaAulaRepository;
-        this.presencaRepository = presencaRepository;
-        this.turmaRepository = turmaRepository;
-    }
+    public ChamadaService(DiaAulaRepository diaAulaRepository, PresencaRepository presencaRepository,
+			TurmaRepository turmaRepository, AccessControlService accessControl) {
+		super();
+		this.diaAulaRepository = diaAulaRepository;
+		this.presencaRepository = presencaRepository;
+		this.turmaRepository = turmaRepository;
+		this.accessControl = accessControl;
+	}
 
-    // Inicializa a chamada do dia
+	// Inicializa a chamada do dia
     @Transactional
     public List<PresencaDTO> inicializarChamada(InicializarChamadaDTO dto) {
         Turma turma = turmaRepository.findById(dto.turmaId())
                 .orElseThrow(() -> new EntityNotFoundException("Turma não encontrada"));
+        
+        accessControl.verificarAcessoProfessor(turma);
 
         if (dto.horasMaximas() <= 0) {
             throw new IllegalArgumentException("Horas máximas devem ser maiores que zero");
