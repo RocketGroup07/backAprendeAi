@@ -61,6 +61,10 @@ public class Atividade {
     
     @Enumerated(EnumType.STRING)
     private StatusAtividade status = StatusAtividade.PENDENTE;
+    
+    @ManyToOne
+    @JoinColumn(name = "resposta_enviada_por_id")
+    private Usuario respostaEnviadaPor;
 	
 	
 	public void entregar() {

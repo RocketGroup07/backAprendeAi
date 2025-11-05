@@ -29,7 +29,9 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class AtividadeServiceImpl implements AtividadeService {
@@ -109,6 +111,24 @@ public class AtividadeServiceImpl implements AtividadeService {
     
     @Override
     @Transactional
+    public List<AtividadeResponseDto> listarAtividadesEntregues(Long turmaId){
+    	List<Atividade> atividadesEntregues = atividadeRepository.findEntreguesByTurmaId(turmaId);
+    	
+    	Usuario usuario = accessControlService.getUsuarioLogado();
+    	
+    	Turma turma = buscarTurmaId(turmaId);
+    	
+    	if(!turma.getProfessor().equals(usuario)) {
+    		throw new IllegalArgumentException("Acesso negado.");
+    	}
+    	
+    	return atividadesEntregues.stream()
+    	        .map(atividadeMapper::toResponseDTO)
+    	        .collect(Collectors.toList());
+    }
+    
+    @Override
+    @Transactional
     public AtividadeResponseDto buscarPorId(Long atividadeId) {
     	Atividade atividade = buscarAtividadeId(atividadeId);
     	return atividadeMapper.toResponseDTO(atividade);
@@ -154,6 +174,7 @@ public class AtividadeServiceImpl implements AtividadeService {
             if (dto.resposta() != null) {
                 atividade.setResposta(dto.resposta());
             }
+            atividade.setRespostaEnviadaPor(aluno);
 
             atividade.setEntregue(true);
             atividade.setStatus(StatusAtividade.ENTREGUE);
@@ -165,6 +186,78 @@ public class AtividadeServiceImpl implements AtividadeService {
             throw new RuntimeException("Erro ao entregar atividade: " + e.getMessage(), e);
         }
     }
+    
+    @Override
+    @Transactional
+    public AtividadeResponseDto editarEntrega(Long atividadeId, String novaResposta, MultipartFile novoArquivo) {
+        try {
+            Atividade atividade = buscarAtividadeId(atividadeId);
+            Turma turma = atividade.getTurma();
+            accessControlService.isAluno(turma);
+
+            Usuario aluno = accessControlService.getUsuarioLogado();
+            
+            if (atividade.getRespostaEnviadaPor() == null || !atividade.getRespostaEnviadaPor().getId().equals(aluno.getId())) {
+                throw new RuntimeException("Você não pode editar a entrega de outro aluno.");
+            }
+
+
+            if (novoArquivo != null && !novoArquivo.isEmpty()) {
+            	for (Arquivo arquivo : atividade.getArquivosEntrega()) {
+            	    arquivoService.deletarArquivo(arquivo.getId());
+            	}
+            	atividade.setArquivosEntrega(Collections.emptyList());
+
+                Arquivo arquivoEntrega = arquivoService.uploadArquivo(novoArquivo);
+                arquivoEntrega.setEnviadoPor(aluno);
+                arquivoEntrega.setAtividade(atividade);
+                arquivoEntrega.setTipo(ArquivoTipo.ENTREGA);
+                atividade.setArquivosEntrega(Arrays.asList(arquivoEntrega));
+            }
+
+            if (novaResposta != null) {
+                atividade.setResposta(novaResposta);
+            }
+
+            atividadeRepository.save(atividade);
+            return atividadeMapper.toResponseDTO(atividade);
+
+        } catch (Exception e) {
+            throw new RuntimeException("Erro ao editar entrega: " + e.getMessage(), e);
+        }
+    }
+
+    @Override
+    @Transactional
+    public void excluirEntrega(Long atividadeId) {
+        try {
+            Atividade atividade = buscarAtividadeId(atividadeId);
+            Turma turma = atividade.getTurma();
+            accessControlService.isAluno(turma);
+            
+            Usuario aluno = accessControlService.getUsuarioLogado();
+            
+            if (atividade.getRespostaEnviadaPor() == null || !atividade.getRespostaEnviadaPor().getId().equals(aluno.getId())) {
+                throw new RuntimeException("Você não pode excluir a entrega de outro aluno.");
+            }
+            
+            for (Arquivo arquivo : atividade.getArquivosEntrega()) {
+        	    arquivoService.deletarArquivo(arquivo.getId());
+        	}
+            atividade.setArquivosEntrega(Collections.emptyList());
+            atividade.setRespostaEnviadaPor(null);
+            atividade.setResposta(null);
+
+            atividade.setEntregue(false);
+            atividade.setStatus(StatusAtividade.PENDENTE);
+
+            atividadeRepository.save(atividade);
+
+        } catch (Exception e) {
+            throw new RuntimeException("Erro ao excluir entrega: " + e.getMessage(), e);
+        }
+    }
+
 
     @Override
     @Transactional
@@ -188,6 +281,8 @@ public class AtividadeServiceImpl implements AtividadeService {
     @Transactional
     public AtividadeResponseDto atualizarAtividade(Long id, AtividadeUpdateDto dto) {
         Atividade atividade = buscarAtividadeId(id);
+        
+        accessControlService.verificarAcessoProfessor(atividade.getTurma());
 
         atividade.setTitulo(dto.titulo());
         atividade.setDataEntrega(dto.dataEntrega());

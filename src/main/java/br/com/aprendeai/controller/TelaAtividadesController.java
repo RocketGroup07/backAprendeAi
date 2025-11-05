@@ -38,10 +38,14 @@ public class TelaAtividadesController {
         return ResponseEntity.ok(atividadeService.baixarAnexo(atividadeId));
     }
     
-    // Listar atividades
     @GetMapping("/turma/{turmaId}")
     public ResponseEntity<List<AtividadeResponseDto>> listarAtividades(@PathVariable Long turmaId) {
     	return ResponseEntity.ok(atividadeService.listarAtividades(turmaId));
+    }
+    
+    @GetMapping("/turma/{turmaId}/entregues")
+    public ResponseEntity<List<AtividadeResponseDto>> listarAtividadesEntregues(@PathVariable Long turmaId){
+    	return ResponseEntity.ok(atividadeService.listarAtividadesEntregues(turmaId));
     }
     
     @PostMapping(value = "/{atividadeId}/entregar/", consumes = {"multipart/form-data"})
@@ -51,6 +55,18 @@ public class TelaAtividadesController {
             @RequestPart(value = "resposta") String resposta,
             @RequestPart("arquivo") MultipartFile arquivo) {
         return ResponseEntity.ok(atividadeService.entregarAtividade(atividadeId, resposta, arquivo));
+    }
+    
+    @PostMapping("/{atividadeId}/entrega")
+    public ResponseEntity<?> editarEntrega(@PathVariable Long atividadeId,@RequestPart(value = "novaResposta") String novaResposta, 
+    		@RequestPart("novoArquivo")  MultipartFile novoArquivo){
+    	return ResponseEntity.ok(atividadeService.editarEntrega(atividadeId, novaResposta, novoArquivo));
+    }
+    
+    @DeleteMapping("/{atividadeId}/entrega")
+    public ResponseEntity<?> excluirEntrega(@PathVariable Long atividadeId){
+    	atividadeService.excluirEntrega(atividadeId);
+    	return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/{id}")

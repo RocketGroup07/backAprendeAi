@@ -15,6 +15,8 @@ public interface AtividadeService {
 	
 	public List<AtividadeResponseDto> listarAtividades(Long turmaId);
 	
+	public List<AtividadeResponseDto> listarAtividadesEntregues(Long turmaId);
+	
 	public Resource baixarAnexo(Long atividadeId);
 	
 	public AtividadeResponseDto entregarAtividade(Long atividadeId, String resposta, MultipartFile arquivo);
@@ -26,5 +28,9 @@ public interface AtividadeService {
 	public void deletarAtividade(Long id);
 
 	AtividadeResponseDto buscarPorId(Long atividadeId);
+
+	AtividadeResponseDto editarEntrega(Long atividadeId, String novaResposta, MultipartFile novoArquivo);
+
+	void excluirEntrega(Long atividadeId);
 
 }
