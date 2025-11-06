@@ -57,7 +57,7 @@ public class TelaAtividadesController {
         return ResponseEntity.ok(atividadeService.entregarAtividade(atividadeId, resposta, arquivo));
     }
     
-    @PostMapping("/{atividadeId}/entrega")
+    @PutMapping("/{atividadeId}/entrega")
     public ResponseEntity<?> editarEntrega(@PathVariable Long atividadeId,@RequestPart(value = "novaResposta") String novaResposta, 
     		@RequestPart("novoArquivo")  MultipartFile novoArquivo){
     	return ResponseEntity.ok(atividadeService.editarEntrega(atividadeId, novaResposta, novoArquivo));
