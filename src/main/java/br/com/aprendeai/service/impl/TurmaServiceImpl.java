@@ -153,7 +153,6 @@ public class TurmaServiceImpl implements TurmaService{
         clone.setCriadoEm(LocalDateTime.now());
         clone.setAlunos(new HashSet<>());
 
-        // Clonar atividades
         List<Atividade> atividadesClonadas = original.getAtividades().stream()
         	    .map(atividadeOriginal -> {
         	        Atividade atividadeClone = new Atividade();
@@ -169,18 +168,14 @@ public class TurmaServiceImpl implements TurmaService{
         	        atividadeClone.setResposta(null);
         	        atividadeClone.setStatus(StatusAtividade.PENDENTE);
 
-        	        // Clonar arquivos anexos
         	        List<Arquivo> anexosClonados = atividadeOriginal.getArquivoAnexo().stream()
         	            .map(arquivoOriginal -> {
         	                Arquivo arquivoClone = new Arquivo();
         	                arquivoClone.setNomeArquivo(arquivoOriginal.getNomeArquivo());
         	                arquivoClone.setCaminhoArquivo(arquivoOriginal.getCaminhoArquivo());
-        	                // outros campos...
         	                return arquivoClone;
         	            }).collect(Collectors.toList());
         	        atividadeClone.setArquivoAnexo(anexosClonados);
-
-        	        // Entregas devem ser nulas ou vazias
         	        atividadeClone.setArquivosEntrega(new ArrayList<>());
 
         	        return atividadeClone;
@@ -189,7 +184,6 @@ public class TurmaServiceImpl implements TurmaService{
 
         clone.setAtividades(atividadesClonadas);
 
-        // Salvar turma e atividades
         Turma turmaSalva = turmaRepository.save(clone);
         atividadeRepository.saveAll(atividadesClonadas);
 
