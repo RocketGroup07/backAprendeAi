@@ -32,10 +32,10 @@ public class PostController {
 	@PostMapping("/criar/{usuarioId}/turma/{turmaId}")
 	public ResponseEntity<PostResponseDto> criarPost(@PathVariable Long usuarioId,
 	                      @PathVariable Long turmaId,
-	                      @RequestPart(value = "post") PostCreateDto postRequest, 
+	                      @RequestPart(value = "post") String post, 
 	                      @RequestPart(value = "arquivo", required = false) MultipartFile arquivo) {
 	    	
-    	return ResponseEntity.ok(postService.criarPost(usuarioId, turmaId, postRequest, arquivo));
+    	return ResponseEntity.ok(postService.criarPost(usuarioId, turmaId, post, arquivo));
 	}
 	
 	@GetMapping("/{postId}/{turmaId}")

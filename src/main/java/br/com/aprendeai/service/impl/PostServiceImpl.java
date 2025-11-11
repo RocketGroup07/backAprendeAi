@@ -8,6 +8,11 @@ import java.util.Optional;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+
 import br.com.aprendeai.config.AccessControlService;
 import br.com.aprendeai.dtos.PostCreateDto;
 import br.com.aprendeai.dtos.PostResponseDto;
@@ -33,6 +38,7 @@ public class PostServiceImpl implements PostService{
     private final ArquivoService arquivoService;
 	private final PostMapper postMapper;
 	private final AccessControlService accessControlService;
+	private final ObjectMapper objectMapper;
 	
 	public PostServiceImpl(PostRepository postRepo, UsuarioRepository userRep, TurmaRepository turmaRepo,
 			ArquivoService arquivoService, PostMapper postMapper, AccessControlService accessControlService) {
@@ -42,45 +48,53 @@ public class PostServiceImpl implements PostService{
 		this.arquivoService = arquivoService;
 		this.postMapper = postMapper;
 		this.accessControlService = accessControlService;
+		
+		this.objectMapper = new ObjectMapper();
+        this.objectMapper.registerModule(new JavaTimeModule());
+        this.objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
 	}
 	
 	@Override
 	@Transactional
-	public PostResponseDto criarPost(Long usuarioId, Long turmaId, PostCreateDto postRequest, MultipartFile arquivo) {
-		
-		Usuario autor = userRep.findById(usuarioId)
-                .orElseThrow(() -> new RuntimeException("Usuário não encontrado."));
-        Turma turma = turmaRepo.findById(turmaId)
-                .orElseThrow(() -> new RuntimeException("Turma não encontrada."));
-        
-        Arquivo arquivoSalvo = null;
-        
-        accessControlService.usuarioParticipaDaTurma(autor, turma);
-        
-        Post novoPost = postMapper.toEntityFromCreateDto(postRequest);
-        novoPost.setAutor(autor);
-        novoPost.setTurma(turma);
-        novoPost.setTitulo(postRequest.titulo()); 
-        novoPost.setConteudo(postRequest.conteudo());
-        novoPost.setPublico(postRequest.publico()); 
-        
-        if(postRequest.dataPostagem() == null) {
-        	novoPost.setDataPostagem(LocalDateTime.now());
-        }else {
-        	novoPost.setDataPostagem(postRequest.dataPostagem());
-        }
-       
-        if (arquivo != null && !arquivo.isEmpty()) {
-            arquivoSalvo = arquivoService.uploadArquivo(arquivo);
-            arquivoSalvo.setEnviadoPor(autor);
-            arquivoSalvo.setPost(novoPost);
-            novoPost.setArquivo(Arrays.asList(arquivoSalvo));
-        }
-
-        Post postSalvo = postRepo.save(novoPost);
-
-        return postMapper.toResponseDto(postSalvo);
-	}
+	public PostResponseDto criarPost(Long usuarioId, Long turmaId, String post, MultipartFile arquivo) {
+	  
+	  Usuario autor = userRep.findById(usuarioId)
+	                .orElseThrow(() -> new RuntimeException("Usuário não encontrado."));
+	        Turma turma = turmaRepo.findById(turmaId)
+	                .orElseThrow(() -> new RuntimeException("Turma não encontrada."));
+	        
+	        Arquivo arquivoSalvo = null;
+	        
+	        accessControlService.usuarioParticipaDaTurma(autor, turma);
+	        PostCreateDto postRequest = null;
+	        try {
+	            postRequest = objectMapper.readValue(post, PostCreateDto.class);
+	        } catch (JsonProcessingException e) {
+	            throw new RuntimeException(e);
+	        }
+	        Post novoPost = postMapper.toEntityFromCreateDto(postRequest);
+	        novoPost.setAutor(autor);
+	        novoPost.setTurma(turma);
+	        novoPost.setTitulo(postRequest.titulo()); 
+	        novoPost.setConteudo(postRequest.conteudo());
+//	        novoPost.setPublico(postRequest.publico());
+	//
+//	        if(postRequest.dataPostagem() == null) {
+//	         novoPost.setDataPostagem(LocalDateTime.now());
+//	        }else {
+//	         novoPost.setDataPostagem(postRequest.dataPostagem());
+//	        }
+	       
+	        if (arquivo != null && !arquivo.isEmpty()) {
+	            arquivoSalvo = arquivoService.uploadArquivo(arquivo);
+	            arquivoSalvo.setEnviadoPor(autor);
+	            arquivoSalvo.setPost(novoPost);
+	            novoPost.setArquivo(Arrays.asList(arquivoSalvo));
+	        }
+	        Post postSalvo = postRepo.save(novoPost);
+	        return postMapper.toResponseDto(postSalvo);
+	 }
+	 
 	
 	@Override
 	@Transactional
