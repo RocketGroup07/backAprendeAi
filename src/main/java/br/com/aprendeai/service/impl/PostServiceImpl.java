@@ -129,7 +129,7 @@ public class PostServiceImpl implements PostService{
 	        
 	        Turma turma = post.getTurma();
 	        
-//	        accessControlService.verificarParticipacao(turma);
+	        accessControlService.verificarParticipacao(turma);
 
 	        if (post.getArquivo() == null || post.getArquivo().isEmpty()) {
 	            throw new EntityNotFoundException("Nenhum anexo encontrado para esta atividade.");
