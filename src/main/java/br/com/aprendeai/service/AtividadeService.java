@@ -2,12 +2,12 @@ package br.com.aprendeai.service;
 
 import java.util.List;
 
-import org.springframework.core.io.Resource;
 import org.springframework.web.multipart.MultipartFile;
 
 import br.com.aprendeai.dtos.AtividadeResponseDto;
 import br.com.aprendeai.dtos.AtividadeUpdateDto;
 import br.com.aprendeai.dtos.RequestNotaDto;
+import br.com.aprendeai.model.Arquivo;
 
 public interface AtividadeService {
 	
@@ -17,7 +17,7 @@ public interface AtividadeService {
 	
 	public List<AtividadeResponseDto> listarAtividadesEntregues(Long turmaId);
 	
-	public Resource baixarAnexo(Long atividadeId);
+	public Arquivo baixarAnexo(Long atividadeId);
 	
 	public AtividadeResponseDto entregarAtividade(Long atividadeId, String resposta, MultipartFile arquivo);
 	

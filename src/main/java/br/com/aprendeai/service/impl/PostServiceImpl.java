@@ -5,6 +5,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
+import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -18,6 +19,7 @@ import br.com.aprendeai.dtos.PostCreateDto;
 import br.com.aprendeai.dtos.PostResponseDto;
 import br.com.aprendeai.mappers.PostMapper;
 import br.com.aprendeai.model.Arquivo;
+import br.com.aprendeai.model.Atividade;
 import br.com.aprendeai.model.Post;
 import br.com.aprendeai.model.Turma;
 import br.com.aprendeai.model.Usuario;
@@ -77,13 +79,13 @@ public class PostServiceImpl implements PostService{
 	        novoPost.setTurma(turma);
 	        novoPost.setTitulo(postRequest.titulo()); 
 	        novoPost.setConteudo(postRequest.conteudo());
-//	        novoPost.setPublico(postRequest.publico());
-	//
-//	        if(postRequest.dataPostagem() == null) {
-//	         novoPost.setDataPostagem(LocalDateTime.now());
-//	        }else {
-//	         novoPost.setDataPostagem(postRequest.dataPostagem());
-//	        }
+	        novoPost.setPublico(postRequest.publico());
+	
+	        if(postRequest.dataPostagem() == null) {
+	         novoPost.setDataPostagem(LocalDateTime.now());
+	        }else {
+	         novoPost.setDataPostagem(postRequest.dataPostagem());
+	        }
 	       
 	        if (arquivo != null && !arquivo.isEmpty()) {
 	            arquivoSalvo = arquivoService.uploadArquivo(arquivo);
@@ -113,6 +115,29 @@ public class PostServiceImpl implements PostService{
 
 	    return postMapper.toResponseDto(post.get());
 	}
+	
+	@Override
+    @Transactional
+    public Arquivo baixarAnexo(Long postId, Long turmaId) {
+		 	Optional<Post> postExiste = postRepo.findByIdAndTurmaId(postId, turmaId);
+
+		    if (postExiste.isEmpty()) {
+		        throw new EntityNotFoundException("Post não encontrado com o id " + postId);
+		    }
+		    
+		    Post post = postExiste.get();
+	        
+	        Turma turma = post.getTurma();
+	        
+//	        accessControlService.verificarParticipacao(turma);
+
+	        if (post.getArquivo() == null || post.getArquivo().isEmpty()) {
+	            throw new EntityNotFoundException("Nenhum anexo encontrado para esta atividade.");
+	        }
+
+	        Arquivo arquivo = post.getArquivo().get(0);
+	        return arquivo;
+	    }
 	
 	@Override
 	@Transactional

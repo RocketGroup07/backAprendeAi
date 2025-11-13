@@ -27,7 +27,6 @@ public class SecurityConfiguration {
 
 	private static final String[] USER_URLS = {
 			"/alunos/**",
-			"/posts/**",
 			"/comentarios/**",
 			"/favoritos/**",
 			"/atividades/**",
@@ -38,6 +37,7 @@ public class SecurityConfiguration {
 	
 	private static final String[] PERMIT_URLS = {
 			"/login/",
+			"/posts/**",
 			"/alunos/cadastro-com-turma",
 			"/alunos/cadastrar",
 	        "/turmas/validar-codigo",

@@ -92,6 +92,7 @@ public class ArquivoServiceImpl implements ArquivoService {
             } else {
                 throw new RuntimeException("Arquivo não pode ser lido!");
             }
+            
         } catch (IOException e) {
             throw new RuntimeException("Falha ao obter o arquivo para download: " + e.getMessage());
         }

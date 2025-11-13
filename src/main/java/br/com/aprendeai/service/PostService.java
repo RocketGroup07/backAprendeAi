@@ -2,9 +2,11 @@ package br.com.aprendeai.service;
 
 import java.util.List;
 
+import org.springframework.core.io.Resource;
 import org.springframework.web.multipart.MultipartFile;
 
 import br.com.aprendeai.dtos.PostResponseDto;
+import br.com.aprendeai.model.Arquivo;
 
 public interface PostService {
 
@@ -17,4 +19,6 @@ public interface PostService {
 	public List<PostResponseDto> buscarNaTurmaPeloTitulo(Long turmaId, String titulo);
 	
 	public void deletarPost(Long turmaId, Long postId);
+
+	Arquivo baixarAnexo(Long postId, Long turmaId);
 }

@@ -1,14 +1,14 @@
 package br.com.aprendeai.repository;
 
 import br.com.aprendeai.model.DiaAula;
-import br.com.aprendeai.model.Turma;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Optional;
 
 public interface DiaAulaRepository extends JpaRepository<DiaAula, Long> {
     Optional<DiaAula> findByTurmaIdAndDataAula(Long turmaId, LocalDate dataAula);
 
-	Optional<DiaAula> findByTurmaId(Long turmaId);
+	List<DiaAula> findByTurmaId(Long turmaId);
 }

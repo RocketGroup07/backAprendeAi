@@ -136,7 +136,7 @@ public class AtividadeServiceImpl implements AtividadeService {
 
     @Override
     @Transactional
-    public Resource baixarAnexo(Long atividadeId) {
+    public Arquivo baixarAnexo(Long atividadeId) {
         Atividade atividade = buscarAtividadeId(atividadeId);
         
         Turma turma = atividade.getTurma();
@@ -148,7 +148,7 @@ public class AtividadeServiceImpl implements AtividadeService {
         }
 
         Arquivo arquivo = atividade.getArquivoAnexo().get(0);
-        return arquivoService.downloadArquivo(arquivo.getId());
+        return arquivo;
     }
 
     @Override
