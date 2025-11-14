@@ -67,14 +67,24 @@ public class TelaAtividadesController {
     @PostMapping(value = "/{atividadeId}/entregar/", consumes = {"multipart/form-data"})
     public ResponseEntity<?> entregarAtividade(
             @PathVariable("atividadeId") Long atividadeId,
-            @PathVariable("alunoId") Long alunoId,
             @RequestPart(value = "resposta") String resposta,
             @RequestPart("arquivo") MultipartFile arquivo) {
         return ResponseEntity.ok(atividadeService.entregarAtividade(atividadeId, resposta, arquivo));
     }
     
+    @GetMapping("/{atividadeId}/entrega/{alunoId}")
+    public ResponseEntity<Resource> baixarEntrega(@PathVariable Long atividadeId, @PathVariable Long alunoId) throws IOException{
+    	Arquivo arquivo = atividadeService.baixarEntregaDeAluno(atividadeId, alunoId);
+    	
+    	Resource arquivoEntrega = arquivoService.downloadArquivo(arquivo.getId());
+    	
+    	Path caminhoArquivo = Paths.get(arquivo.getCaminhoArquivo());
+		var contentType = Files.probeContentType(caminhoArquivo);
+		
+		return ResponseEntity.ok().contentType(MediaType.parseMediaType(contentType)).header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + arquivo.getNomeArquivo() + "\"")
+		      		.body(arquivoEntrega);
     
-//    public ResponseEntity<Resource> baixarEntrega(@PathVariable atividadeId)
+    }
     
     @PutMapping("/{atividadeId}/entrega")
     public ResponseEntity<?> editarEntrega(@PathVariable Long atividadeId,@RequestPart(value = "novaResposta") String novaResposta, 

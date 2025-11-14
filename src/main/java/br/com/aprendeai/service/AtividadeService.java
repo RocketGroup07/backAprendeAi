@@ -33,4 +33,6 @@ public interface AtividadeService {
 
 	void excluirEntrega(Long atividadeId);
 
+	Arquivo baixarEntregaDeAluno(Long atividadeId, Long alunoId);
+
 }

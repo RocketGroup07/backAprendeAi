@@ -13,21 +13,21 @@ import br.com.aprendeai.model.Arquivo;
 import br.com.aprendeai.model.Atividade;
 import br.com.aprendeai.model.Turma;
 import br.com.aprendeai.model.Usuario;
+import br.com.aprendeai.repository.ArquivoRepository;
 import br.com.aprendeai.repository.AtividadeRepository;
 import br.com.aprendeai.repository.TurmaRepository;
 import br.com.aprendeai.service.ArquivoService;
 import br.com.aprendeai.service.AtividadeService;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 
-import org.springframework.core.io.Resource;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -42,26 +42,21 @@ public class AtividadeServiceImpl implements AtividadeService {
     private final AccessControlService accessControlService;
     private final AtividadeMapper atividadeMapper;
     private final ObjectMapper objectMapper;
+    private final ArquivoRepository arquivoRepo;
 
-    public AtividadeServiceImpl(
-            AtividadeRepository atividadeRepository,
-            TurmaRepository turmaRepository,
-            ArquivoService arquivoService,
-            AccessControlService accessControlService,
-            AtividadeMapper atividadeMapper) {
+    public AtividadeServiceImpl(AtividadeRepository atividadeRepository, TurmaRepository turmaRepository,
+			ArquivoService arquivoService, AccessControlService accessControlService, AtividadeMapper atividadeMapper,
+			ObjectMapper objectMapper, ArquivoRepository arquivoRepo) {
+		this.atividadeRepository = atividadeRepository;
+		this.turmaRepository = turmaRepository;
+		this.arquivoService = arquivoService;
+		this.accessControlService = accessControlService;
+		this.atividadeMapper = atividadeMapper;
+		this.objectMapper = objectMapper;
+		this.arquivoRepo = arquivoRepo;
+	}
 
-        this.atividadeRepository = atividadeRepository;
-        this.turmaRepository = turmaRepository;
-        this.arquivoService = arquivoService;
-        this.accessControlService = accessControlService;
-        this.atividadeMapper = atividadeMapper;
-
-        this.objectMapper = new ObjectMapper();
-        this.objectMapper.registerModule(new JavaTimeModule());
-        this.objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
-    }
-
-    @Override
+	@Override
     @Transactional
     public AtividadeResponseDto criarAtividade(Long turmaId, String Atividade, MultipartFile arquivo) {
         try {
@@ -168,7 +163,7 @@ public class AtividadeServiceImpl implements AtividadeService {
                 arquivoEntrega.setEnviadoPor(aluno);
                 arquivoEntrega.setAtividade(atividade);
                 arquivoEntrega.setTipo(ArquivoTipo.ENTREGA);
-                atividade.setArquivosEntrega(Arrays.asList(arquivoEntrega));
+                atividade.setArquivosEntrega(new ArrayList<>(Arrays.asList(arquivoEntrega)));
             }
 
             if (dto.resposta() != null) {
@@ -183,8 +178,40 @@ public class AtividadeServiceImpl implements AtividadeService {
             return atividadeMapper.toResponseDTO(atividade);
 
         } catch (Exception e) {
-            throw new RuntimeException("Erro ao entregar atividade: " + e.getMessage(), e);
+        	e.printStackTrace(); 
+            String errorMessage = e.getMessage() != null ? e.getMessage() : "Causa da exceção desconhecida. Verifique os logs do servidor.";
+            throw new RuntimeException("Erro ao entregar atividade: " + errorMessage, e);
         }
+    }
+    
+    @Override
+    @Transactional
+    public Arquivo baixarEntregaDeAluno(Long atividadeId, Long alunoId) {
+    	
+    	 Atividade atividade = buscarAtividadeId(atividadeId);
+    	 
+    	 Usuario usuarioLogado = accessControlService.getUsuarioLogado();         
+         Turma turma = atividade.getTurma();
+         
+         boolean isProfessor = true;
+         try {
+             accessControlService.verificarAcessoProfessor(turma); 
+         } catch (AccessDeniedException e) {
+             isProfessor = false; 
+         }
+         
+         boolean eOProprioAluno = usuarioLogado.getId().equals(alunoId);
+         
+         if (!isProfessor && !eOProprioAluno) {
+             throw new AccessDeniedException("Você não tem permissão para baixar esta entrega.");
+         }
+         
+         Arquivo arquivoEntrega = arquivoRepo
+     	        .findByAtividadeIdAndEnviadoPorId(atividadeId, alunoId)
+     	        .orElseThrow(() -> new EntityNotFoundException("Entrega não encontrada para esta atividade e aluno."));
+         
+         return arquivoEntrega;
+         
     }
     
     @Override
