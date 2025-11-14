@@ -79,7 +79,7 @@ public class PostServiceImpl implements PostService{
 	        novoPost.setTurma(turma);
 	        novoPost.setTitulo(postRequest.titulo()); 
 	        novoPost.setConteudo(postRequest.conteudo());
-	        novoPost.setPublico(postRequest.publico());
+	        novoPost.setPublico(postRequest.publico() == null ? true : postRequest.publico());
 	
 	        if(postRequest.dataPostagem() == null) {
 	         novoPost.setDataPostagem(LocalDateTime.now());
