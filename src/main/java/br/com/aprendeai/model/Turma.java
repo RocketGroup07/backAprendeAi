@@ -30,7 +30,7 @@ public class Turma {
     private Usuario professor;
     
     
-    @OneToMany
+    @OneToMany(mappedBy = "turma", cascade = CascadeType.REMOVE)
     private List<Atividade> atividades;
 
     @ManyToMany

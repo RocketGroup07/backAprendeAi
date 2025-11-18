@@ -32,5 +32,9 @@ public class Arquivo {
     @JoinColumn(name = "usuario_id")
     private Usuario enviadoPor;
     
+    @ManyToOne
+    @JoinColumn(name = "entrega_atividade_id")
+    private EntregaAtividade entregaAtividade;
+    
     private ArquivoTipo tipo;
 }

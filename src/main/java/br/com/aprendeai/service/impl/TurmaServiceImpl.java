@@ -15,7 +15,6 @@ import br.com.aprendeai.dtos.TurmaCreateDto;
 import br.com.aprendeai.dtos.TurmaResponseDto;
 import br.com.aprendeai.dtos.TurmaUpdateDto;
 import br.com.aprendeai.enums.PapelEnum;
-import br.com.aprendeai.enums.StatusAtividade;
 import br.com.aprendeai.mappers.TurmaMapper;
 import br.com.aprendeai.model.Arquivo;
 import br.com.aprendeai.model.Atividade;
@@ -159,14 +158,10 @@ public class TurmaServiceImpl implements TurmaService{
         	        atividadeClone.setTitulo(atividadeOriginal.getTitulo());
         	        atividadeClone.setDataAtividade(atividadeOriginal.getDataAtividade());
         	        atividadeClone.setDataEntrega(atividadeOriginal.getDataEntrega());
-        	        atividadeClone.setEntregue(false);
         	        atividadeClone.setConteudo(atividadeOriginal.getConteudo());
-        	        atividadeClone.setNota(null);
-        	        atividadeClone.setFeedback(null);
         	        atividadeClone.setProfessor(atividadeOriginal.getProfessor());
         	        atividadeClone.setTurma(clone);
-        	        atividadeClone.setResposta(null);
-        	        atividadeClone.setStatus(StatusAtividade.PENDENTE);
+        	        atividadeClone.setEntregas(new ArrayList<>());
 
         	        List<Arquivo> anexosClonados = atividadeOriginal.getArquivoAnexo().stream()
         	            .map(arquivoOriginal -> {
@@ -176,7 +171,6 @@ public class TurmaServiceImpl implements TurmaService{
         	                return arquivoClone;
         	            }).collect(Collectors.toList());
         	        atividadeClone.setArquivoAnexo(anexosClonados);
-        	        atividadeClone.setArquivosEntrega(new ArrayList<>());
 
         	        return atividadeClone;
         	    }).collect(Collectors.toList());

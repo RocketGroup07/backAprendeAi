@@ -8,8 +8,7 @@ public record AtividadeUpdateDto(
 		String titulo,
 		LocalDateTime dataEntrega,
 		@Size(max = 5000)
-		String conteudo,
-		String feedback
+		String conteudo
 		) {
 
 }

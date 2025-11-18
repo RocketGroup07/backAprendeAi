@@ -4,10 +4,11 @@ import java.util.List;
 
 import br.com.aprendeai.enums.StatusAtividade;
 
-public record AtividadeSubmitResponseDto(
+public record EntregaAtividadeResponseDto(
 			Long id,
 			String titulo,
 			boolean entregue,
+			String respostaTexto,
 			StatusAtividade status,
 			List<String> nomesArquivoEntrega
 			) {

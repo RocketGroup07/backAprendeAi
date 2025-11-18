@@ -41,7 +41,7 @@ public class Post {
 	
 	private boolean publico = true;
 	
-	@OneToMany
+	@OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Arquivo> arquivo;
 	
 	@OneToMany(mappedBy = "post", cascade = CascadeType.ALL)

@@ -11,6 +11,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import br.com.aprendeai.dtos.AtividadeResponseDto;
+import br.com.aprendeai.dtos.FavoritosResponseDto;
 import br.com.aprendeai.dtos.PostResponseDto;
 import br.com.aprendeai.service.FavoritoService;
 
@@ -25,14 +27,29 @@ public class FavoritoController {
 		this.favoritoService = favoritoService;
 	}
 
-	@PostMapping("/adicionar/{postId}")
-    public ResponseEntity<PostResponseDto> favoritar(@PathVariable Long postId) {
+	@PostMapping("/adicionar/post/{postId}")
+    public ResponseEntity<PostResponseDto> favoritarPosts(@PathVariable Long postId) {
 		return ResponseEntity.ok(favoritoService.favoritar(postId));
     }
+	
+	@PostMapping("/adicionar/atividade/{atividadeId}")
+    public ResponseEntity<AtividadeResponseDto> favoritarAtv(@PathVariable Long atividadeId) {
+		return ResponseEntity.ok(favoritoService.favoritarAtv(atividadeId));
+    }
 
-    @GetMapping("/listar")
-    public ResponseEntity<List<PostResponseDto>> listarFavoritos() {
+    @GetMapping("/listar/posts")
+    public ResponseEntity<List<PostResponseDto>> listarPostsFavoritos() {
         return ResponseEntity.ok(favoritoService.listarFavoritos());
+    }
+    
+    @GetMapping("/listar/")
+    public ResponseEntity<FavoritosResponseDto> listarTodosFavoritos() {
+        return ResponseEntity.ok(favoritoService.listarTodosFavoritos());
+    }
+    
+    @GetMapping("/listar/atividades")
+    public ResponseEntity<List<AtividadeResponseDto>> listarAtividadesFavoritos() {
+        return ResponseEntity.ok(favoritoService.listarAtividadesFavs());
     }
     
     @DeleteMapping("/remover/{favoritoId}")
