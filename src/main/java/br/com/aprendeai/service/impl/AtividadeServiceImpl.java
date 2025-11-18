@@ -3,11 +3,8 @@ package br.com.aprendeai.service.impl;
 import br.com.aprendeai.config.AccessControlService;
 import br.com.aprendeai.dtos.AtividadeCreateDto;
 import br.com.aprendeai.dtos.AtividadeResponseDto;
-import br.com.aprendeai.dtos.AtividadeSubmitRequestDto;
 import br.com.aprendeai.dtos.AtividadeUpdateDto;
-import br.com.aprendeai.dtos.RequestNotaDto;
 import br.com.aprendeai.enums.ArquivoTipo;
-import br.com.aprendeai.enums.StatusAtividade;
 import br.com.aprendeai.mappers.AtividadeMapper;
 import br.com.aprendeai.model.Arquivo;
 import br.com.aprendeai.model.Atividade;
@@ -15,6 +12,7 @@ import br.com.aprendeai.model.Turma;
 import br.com.aprendeai.model.Usuario;
 import br.com.aprendeai.repository.ArquivoRepository;
 import br.com.aprendeai.repository.AtividadeRepository;
+import br.com.aprendeai.repository.EntregaAtividadeRepository;
 import br.com.aprendeai.repository.TurmaRepository;
 import br.com.aprendeai.service.ArquivoService;
 import br.com.aprendeai.service.AtividadeService;
@@ -22,16 +20,12 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 public class AtividadeServiceImpl implements AtividadeService {
@@ -43,10 +37,12 @@ public class AtividadeServiceImpl implements AtividadeService {
     private final AtividadeMapper atividadeMapper;
     private final ObjectMapper objectMapper;
     private final ArquivoRepository arquivoRepo;
+    private final EntregaAtividadeRepository entregaAtividadeRepository;
 
-    public AtividadeServiceImpl(AtividadeRepository atividadeRepository, TurmaRepository turmaRepository,
+	public AtividadeServiceImpl(AtividadeRepository atividadeRepository, TurmaRepository turmaRepository,
 			ArquivoService arquivoService, AccessControlService accessControlService, AtividadeMapper atividadeMapper,
-			ObjectMapper objectMapper, ArquivoRepository arquivoRepo) {
+			ObjectMapper objectMapper, ArquivoRepository arquivoRepo,
+			EntregaAtividadeRepository entregaAtividadeRepository) {
 		this.atividadeRepository = atividadeRepository;
 		this.turmaRepository = turmaRepository;
 		this.arquivoService = arquivoService;
@@ -54,6 +50,7 @@ public class AtividadeServiceImpl implements AtividadeService {
 		this.atividadeMapper = atividadeMapper;
 		this.objectMapper = objectMapper;
 		this.arquivoRepo = arquivoRepo;
+		this.entregaAtividadeRepository = entregaAtividadeRepository;
 	}
 
 	@Override
@@ -69,7 +66,6 @@ public class AtividadeServiceImpl implements AtividadeService {
 
             Atividade atividade = atividadeMapper.toEntityFromCreateDto(dto);
             atividade.setProfessor(professor);
-            atividade.setEntregue(false);
             atividade.setDataAtividade(LocalDateTime.now());
             atividade.setTurma(turma);
 
@@ -106,24 +102,6 @@ public class AtividadeServiceImpl implements AtividadeService {
     
     @Override
     @Transactional
-    public List<AtividadeResponseDto> listarAtividadesEntregues(Long turmaId){
-    	List<Atividade> atividadesEntregues = atividadeRepository.findEntreguesByTurmaId(turmaId);
-    	
-    	Usuario usuario = accessControlService.getUsuarioLogado();
-    	
-    	Turma turma = buscarTurmaId(turmaId);
-    	
-    	if(!turma.getProfessor().equals(usuario)) {
-    		throw new IllegalArgumentException("Acesso negado.");
-    	}
-    	
-    	return atividadesEntregues.stream()
-    	        .map(atividadeMapper::toResponseDTO)
-    	        .collect(Collectors.toList());
-    }
-    
-    @Override
-    @Transactional
     public AtividadeResponseDto buscarPorId(Long atividadeId) {
     	Atividade atividade = buscarAtividadeId(atividadeId);
     	return atividadeMapper.toResponseDTO(atividade);
@@ -146,163 +124,7 @@ public class AtividadeServiceImpl implements AtividadeService {
         return arquivo;
     }
 
-    @Override
-    @Transactional
-    public AtividadeResponseDto entregarAtividade(Long atividadeId, String resposta, MultipartFile arquivo) {
-        try {
-            Atividade atividade = buscarAtividadeId(atividadeId);
-            Turma turma = atividade.getTurma();
-            accessControlService.isAluno(turma);
-
-            Usuario aluno = accessControlService.getUsuarioLogado();
-
-            AtividadeSubmitRequestDto dto = objectMapper.readValue(resposta, AtividadeSubmitRequestDto.class);
-
-            if (arquivo != null && !arquivo.isEmpty()) {
-                Arquivo arquivoEntrega = arquivoService.uploadArquivo(arquivo);
-                arquivoEntrega.setEnviadoPor(aluno);
-                arquivoEntrega.setAtividade(atividade);
-                arquivoEntrega.setTipo(ArquivoTipo.ENTREGA);
-                atividade.setArquivosEntrega(new ArrayList<>(Arrays.asList(arquivoEntrega)));
-            }
-
-            if (dto.resposta() != null) {
-                atividade.setResposta(dto.resposta());
-            }
-            atividade.setRespostaEnviadaPor(aluno);
-
-            atividade.setEntregue(true);
-            atividade.setStatus(StatusAtividade.ENTREGUE);
-
-            atividadeRepository.save(atividade);
-            return atividadeMapper.toResponseDTO(atividade);
-
-        } catch (Exception e) {
-        	e.printStackTrace(); 
-            String errorMessage = e.getMessage() != null ? e.getMessage() : "Causa da exceção desconhecida. Verifique os logs do servidor.";
-            throw new RuntimeException("Erro ao entregar atividade: " + errorMessage, e);
-        }
-    }
     
-    @Override
-    @Transactional
-    public Arquivo baixarEntregaDeAluno(Long atividadeId, Long alunoId) {
-    	
-    	 Atividade atividade = buscarAtividadeId(atividadeId);
-    	 
-    	 Usuario usuarioLogado = accessControlService.getUsuarioLogado();         
-         Turma turma = atividade.getTurma();
-         
-         boolean isProfessor = true;
-         try {
-             accessControlService.verificarAcessoProfessor(turma); 
-         } catch (AccessDeniedException e) {
-             isProfessor = false; 
-         }
-         
-         boolean eOProprioAluno = usuarioLogado.getId().equals(alunoId);
-         
-         if (!isProfessor && !eOProprioAluno) {
-             throw new AccessDeniedException("Você não tem permissão para baixar esta entrega.");
-         }
-         
-         Arquivo arquivoEntrega = arquivoRepo
-     	        .findByAtividadeIdAndEnviadoPorId(atividadeId, alunoId)
-     	        .orElseThrow(() -> new EntityNotFoundException("Entrega não encontrada para esta atividade e aluno."));
-         
-         return arquivoEntrega;
-         
-    }
-    
-    @Override
-    @Transactional
-    public AtividadeResponseDto editarEntrega(Long atividadeId, String novaResposta, MultipartFile novoArquivo) {
-        try {
-            Atividade atividade = buscarAtividadeId(atividadeId);
-            Turma turma = atividade.getTurma();
-            accessControlService.isAluno(turma);
-
-            Usuario aluno = accessControlService.getUsuarioLogado();
-            
-            if (atividade.getRespostaEnviadaPor() == null || !atividade.getRespostaEnviadaPor().getId().equals(aluno.getId())) {
-                throw new RuntimeException("Você não pode editar a entrega de outro aluno.");
-            }
-
-
-            if (novoArquivo != null && !novoArquivo.isEmpty()) {
-            	for (Arquivo arquivo : atividade.getArquivosEntrega()) {
-            	    arquivoService.deletarArquivo(arquivo.getId());
-            	}
-            	atividade.setArquivosEntrega(Collections.emptyList());
-
-                Arquivo arquivoEntrega = arquivoService.uploadArquivo(novoArquivo);
-                arquivoEntrega.setEnviadoPor(aluno);
-                arquivoEntrega.setAtividade(atividade);
-                arquivoEntrega.setTipo(ArquivoTipo.ENTREGA);
-                atividade.setArquivosEntrega(Arrays.asList(arquivoEntrega));
-            }
-
-            if (novaResposta != null) {
-                atividade.setResposta(novaResposta);
-            }
-
-            atividadeRepository.save(atividade);
-            return atividadeMapper.toResponseDTO(atividade);
-
-        } catch (Exception e) {
-            throw new RuntimeException("Erro ao editar entrega: " + e.getMessage(), e);
-        }
-    }
-
-    @Override
-    @Transactional
-    public void excluirEntrega(Long atividadeId) {
-        try {
-            Atividade atividade = buscarAtividadeId(atividadeId);
-            Turma turma = atividade.getTurma();
-            accessControlService.isAluno(turma);
-            
-            Usuario aluno = accessControlService.getUsuarioLogado();
-            
-            if (atividade.getRespostaEnviadaPor() == null || !atividade.getRespostaEnviadaPor().getId().equals(aluno.getId())) {
-                throw new RuntimeException("Você não pode excluir a entrega de outro aluno.");
-            }
-            
-            for (Arquivo arquivo : atividade.getArquivosEntrega()) {
-        	    arquivoService.deletarArquivo(arquivo.getId());
-        	}
-            atividade.setArquivosEntrega(Collections.emptyList());
-            atividade.setRespostaEnviadaPor(null);
-            atividade.setResposta(null);
-
-            atividade.setEntregue(false);
-            atividade.setStatus(StatusAtividade.PENDENTE);
-
-            atividadeRepository.save(atividade);
-
-        } catch (Exception e) {
-            throw new RuntimeException("Erro ao excluir entrega: " + e.getMessage(), e);
-        }
-    }
-
-
-    @Override
-    @Transactional
-    public AtividadeResponseDto corrigirAtividade(Long atividadeId, RequestNotaDto dto) {
-        Atividade atividade = buscarAtividadeId(atividadeId);
-        Turma turma = atividade.getTurma();
-        accessControlService.verificarAcessoProfessor(turma);
-
-        if (atividade.getStatus() != StatusAtividade.ENTREGUE) {
-            throw new IllegalStateException("A atividade só pode ser corrigida após ser entregue.");
-        }
-
-        atividade.corrigir(dto.nota(), dto.feedback());
-        atividade.setStatus(StatusAtividade.CORRIGIDA);
-
-        atividadeRepository.save(atividade);
-        return atividadeMapper.toResponseDTO(atividade);
-    }
 
     @Override
     @Transactional
@@ -314,7 +136,6 @@ public class AtividadeServiceImpl implements AtividadeService {
         atividade.setTitulo(dto.titulo());
         atividade.setDataEntrega(dto.dataEntrega());
         atividade.setConteudo(dto.conteudo());
-        atividade.setFeedback(dto.feedback());
 
         atividadeRepository.save(atividade);
         return atividadeMapper.toResponseDTO(atividade);

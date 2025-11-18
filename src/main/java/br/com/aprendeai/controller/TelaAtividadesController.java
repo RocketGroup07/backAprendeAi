@@ -2,7 +2,6 @@ package br.com.aprendeai.controller;
 
 import br.com.aprendeai.dtos.AtividadeResponseDto;
 import br.com.aprendeai.dtos.AtividadeUpdateDto;
-import br.com.aprendeai.dtos.RequestNotaDto;
 import br.com.aprendeai.model.Arquivo;
 import br.com.aprendeai.service.ArquivoService;
 import br.com.aprendeai.service.AtividadeService;
@@ -58,54 +57,10 @@ public class TelaAtividadesController {
     public ResponseEntity<List<AtividadeResponseDto>> listarAtividades(@PathVariable Long turmaId) {
     	return ResponseEntity.ok(atividadeService.listarAtividades(turmaId));
     }
-    
-    @GetMapping("/turma/{turmaId}/entregues")
-    public ResponseEntity<List<AtividadeResponseDto>> listarAtividadesEntregues(@PathVariable Long turmaId){
-    	return ResponseEntity.ok(atividadeService.listarAtividadesEntregues(turmaId));
-    }
-    
-    @PostMapping(value = "/{atividadeId}/entregar/", consumes = {"multipart/form-data"})
-    public ResponseEntity<?> entregarAtividade(
-            @PathVariable("atividadeId") Long atividadeId,
-            @RequestPart(value = "resposta") String resposta,
-            @RequestPart("arquivo") MultipartFile arquivo) {
-        return ResponseEntity.ok(atividadeService.entregarAtividade(atividadeId, resposta, arquivo));
-    }
-    
-    @GetMapping("/{atividadeId}/entrega/{alunoId}")
-    public ResponseEntity<Resource> baixarEntrega(@PathVariable Long atividadeId, @PathVariable Long alunoId) throws IOException{
-    	Arquivo arquivo = atividadeService.baixarEntregaDeAluno(atividadeId, alunoId);
-    	
-    	Resource arquivoEntrega = arquivoService.downloadArquivo(arquivo.getId());
-    	
-    	Path caminhoArquivo = Paths.get(arquivo.getCaminhoArquivo());
-		var contentType = Files.probeContentType(caminhoArquivo);
-		
-		return ResponseEntity.ok().contentType(MediaType.parseMediaType(contentType)).header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + arquivo.getNomeArquivo() + "\"")
-		      		.body(arquivoEntrega);
-    
-    }
-    
-    @PutMapping("/{atividadeId}/entrega")
-    public ResponseEntity<?> editarEntrega(@PathVariable Long atividadeId,@RequestPart(value = "novaResposta") String novaResposta, 
-    		@RequestPart("novoArquivo")  MultipartFile novoArquivo){
-    	return ResponseEntity.ok(atividadeService.editarEntrega(atividadeId, novaResposta, novoArquivo));
-    }
-    
-    @DeleteMapping("/{atividadeId}/entrega")
-    public ResponseEntity<?> excluirEntrega(@PathVariable Long atividadeId){
-    	atividadeService.excluirEntrega(atividadeId);
-    	return ResponseEntity.noContent().build();
-    }
 
     @GetMapping("/{id}")
     public ResponseEntity<?> buscarPorId(@PathVariable("id") Long id) {
         return ResponseEntity.ok(atividadeService.buscarPorId(id));
-    }
-    
-    @PutMapping("/{atividadeId}/corrigir")
-    public ResponseEntity<?> corrigirAtividade(@PathVariable("atividadeId") Long atividadeId, @RequestBody RequestNotaDto dto){
-    	return ResponseEntity.ok(atividadeService.corrigirAtividade(atividadeId, dto));
     }
 
     // Atualizar atividade
