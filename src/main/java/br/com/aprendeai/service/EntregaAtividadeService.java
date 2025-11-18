@@ -14,7 +14,7 @@ public interface EntregaAtividadeService {
 	
 	public List<AtividadeResponseDto> listarAtividadesEntregues(Long turmaId);
 	
-	public AtividadeResponseDto corrigirAtividade(Long atividadeId, RequestNotaDto dto);
+	public AtividadeResponseDto corrigirAtividade(Long atividadeId, Long alunoId, RequestNotaDto dto);
 	
 	AtividadeResponseDto editarEntrega(Long atividadeId, String novaResposta, MultipartFile novoArquivo);
 

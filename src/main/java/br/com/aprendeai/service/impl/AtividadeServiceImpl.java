@@ -8,11 +8,10 @@ import br.com.aprendeai.enums.ArquivoTipo;
 import br.com.aprendeai.mappers.AtividadeMapper;
 import br.com.aprendeai.model.Arquivo;
 import br.com.aprendeai.model.Atividade;
+import br.com.aprendeai.model.EntregaAtividade;
 import br.com.aprendeai.model.Turma;
 import br.com.aprendeai.model.Usuario;
-import br.com.aprendeai.repository.ArquivoRepository;
 import br.com.aprendeai.repository.AtividadeRepository;
-import br.com.aprendeai.repository.EntregaAtividadeRepository;
 import br.com.aprendeai.repository.TurmaRepository;
 import br.com.aprendeai.service.ArquivoService;
 import br.com.aprendeai.service.AtividadeService;
@@ -36,21 +35,20 @@ public class AtividadeServiceImpl implements AtividadeService {
     private final AccessControlService accessControlService;
     private final AtividadeMapper atividadeMapper;
     private final ObjectMapper objectMapper;
-    private final ArquivoRepository arquivoRepo;
-    private final EntregaAtividadeRepository entregaAtividadeRepository;
+//    private final EntregaAtividadeRepository entregaAtividadeRepo;
 
 	public AtividadeServiceImpl(AtividadeRepository atividadeRepository, TurmaRepository turmaRepository,
 			ArquivoService arquivoService, AccessControlService accessControlService, AtividadeMapper atividadeMapper,
-			ObjectMapper objectMapper, ArquivoRepository arquivoRepo,
-			EntregaAtividadeRepository entregaAtividadeRepository) {
+			ObjectMapper objectMapper
+//			
+) {
 		this.atividadeRepository = atividadeRepository;
 		this.turmaRepository = turmaRepository;
 		this.arquivoService = arquivoService;
 		this.accessControlService = accessControlService;
 		this.atividadeMapper = atividadeMapper;
 		this.objectMapper = objectMapper;
-		this.arquivoRepo = arquivoRepo;
-		this.entregaAtividadeRepository = entregaAtividadeRepository;
+//		this.entregaAtividadeRepo = entregaAtividadeRepo;
 	}
 
 	@Override
@@ -147,6 +145,8 @@ public class AtividadeServiceImpl implements AtividadeService {
         if (!atividadeRepository.existsById(id)) {
             throw new EntityNotFoundException("Atividade não encontrada.");
         }
+        
+//        entregaAtividadeRepo.deleteByAtividade(id);
         atividadeRepository.deleteById(id);
     }
 

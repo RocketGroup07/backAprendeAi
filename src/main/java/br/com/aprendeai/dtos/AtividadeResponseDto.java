@@ -11,7 +11,8 @@ public record AtividadeResponseDto(
 	    LocalDateTime dataEntrega,
 	    String professorNome,
 	    String turmaNome,
-		List<String> nomesArquivosAnexo
+		List<String> nomesArquivosAnexo,
+		List<EntregaAtividadeResponseDto> entrega
 		) {
 
 }

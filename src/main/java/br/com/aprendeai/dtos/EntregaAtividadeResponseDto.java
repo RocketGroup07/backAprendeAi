@@ -8,6 +8,7 @@ public record EntregaAtividadeResponseDto(
 			Long id,
 			String titulo,
 			boolean entregue,
+			String respostaTexto,
 			StatusAtividade status,
 			List<String> nomesArquivoEntrega
 			) {

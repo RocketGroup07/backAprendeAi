@@ -5,11 +5,16 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 
 import br.com.aprendeai.config.AccessControlService;
+import br.com.aprendeai.dtos.AtividadeResponseDto;
+import br.com.aprendeai.dtos.FavoritosResponseDto;
 import br.com.aprendeai.dtos.PostResponseDto;
+import br.com.aprendeai.mappers.AtividadeMapper;
 import br.com.aprendeai.mappers.PostMapper;
+import br.com.aprendeai.model.Atividade;
 import br.com.aprendeai.model.Favorito;
 import br.com.aprendeai.model.Post;
 import br.com.aprendeai.model.Usuario;
+import br.com.aprendeai.repository.AtividadeRepository;
 import br.com.aprendeai.repository.FavoritoRepository;
 import br.com.aprendeai.repository.PostRepository;
 import br.com.aprendeai.service.FavoritoService;
@@ -22,13 +27,18 @@ public class FavoritoServiceImpl implements FavoritoService{
     private final FavoritoRepository favoritoRepo;
 	private final PostRepository postRepo;
 	private final PostMapper postMapper;
+	private final AtividadeMapper atividadeMapper;
+	private final AtividadeRepository atividadeRepo;
 
 	public FavoritoServiceImpl(AccessControlService accessControl, FavoritoRepository favoritoRepo,
-			PostRepository postRepo, PostMapper postMapper) {
+			PostRepository postRepo, PostMapper postMapper, AtividadeMapper atividadeMapper,
+			AtividadeRepository atividadeRepo) {
 		this.accessControl = accessControl;
 		this.favoritoRepo = favoritoRepo;
 		this.postRepo = postRepo;
 		this.postMapper = postMapper;
+		this.atividadeMapper = atividadeMapper;
+		this.atividadeRepo = atividadeRepo;
 	}
 
 	@Override
@@ -71,6 +81,60 @@ public class FavoritoServiceImpl implements FavoritoService{
 		.orElseThrow(() -> new RuntimeException("Favorito não encontrado"));
 
 		favoritoRepo.deleteById(favoritoId);
+	}
+
+	@Override
+	@Transactional
+	public AtividadeResponseDto favoritarAtv(Long atividadeId) {
+		Usuario usuario = accessControl.getUsuarioLogado();
+		
+        Atividade atividade = atividadeRepo.findById(atividadeId).orElseThrow();
+
+        boolean jaFavoritado = favoritoRepo.findByUsuario(usuario).stream()
+                .anyMatch(f -> f.getPost().getId().equals(atividadeId));
+        if (jaFavoritado) {
+            return atividadeMapper.toResponseDTO(atividade);
+        }
+
+        Favorito favorito = new Favorito();
+        favorito.setUsuario(usuario);
+        favorito.setAtividade(atividade);
+
+        favoritoRepo.save(favorito);
+
+        return atividadeMapper.toResponseDTO(atividade);
+	}
+
+	@Override
+	@Transactional
+	public List<AtividadeResponseDto> listarAtividadesFavs() {
+		Usuario usuario = accessControl.getUsuarioLogado();
+        List<Favorito> favoritos = favoritoRepo.findByUsuario(usuario);
+
+        return favoritos.stream()
+                .map(fav -> atividadeMapper.toResponseDTO(fav.getAtividade()))
+                .toList();
+	}
+	
+	@Override
+	@Transactional
+	public FavoritosResponseDto listarTodosFavoritos() {
+	    Usuario usuario = accessControl.getUsuarioLogado();
+	    List<Favorito> favoritos = favoritoRepo.findByUsuario(usuario);
+	    
+	    List<PostResponseDto> postsFav = favoritos.stream()
+	            .map(Favorito::getPost)
+	            .filter(java.util.Objects::nonNull) 
+	            .map(postMapper::toResponseDto)
+	            .toList();
+
+	    List<AtividadeResponseDto> atividadesFav = favoritos.stream()
+	            .map(Favorito::getAtividade)
+	            .filter(java.util.Objects::nonNull) 
+	            .map(atividadeMapper::toResponseDTO)
+	            .toList();
+
+	    return new FavoritosResponseDto(postsFav, atividadesFav);
 	}
 
 }

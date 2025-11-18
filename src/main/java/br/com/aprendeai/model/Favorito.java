@@ -20,4 +20,7 @@ public class Favorito {
 	
 	@ManyToOne
 	private Post post;
+	
+	@ManyToOne
+	private Atividade atividade;
 }
