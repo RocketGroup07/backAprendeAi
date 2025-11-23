@@ -9,6 +9,7 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -25,7 +26,7 @@ public class EntregaAtividade {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     
-    @ManyToOne 
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "atividade_id")
     private Atividade atividade;
     
@@ -47,7 +48,7 @@ public class EntregaAtividade {
     private String feedback;
     
     @Enumerated(EnumType.STRING)
-    private StatusAtividade status = StatusAtividade.ENTREGUE;
+    private StatusAtividade status = StatusAtividade.PENDENTE;
     
     private boolean entregue;
     

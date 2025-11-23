@@ -1,7 +1,13 @@
 package br.com.aprendeai.controller;
 
 import br.com.aprendeai.dtos.*;
+import br.com.aprendeai.model.Arquivo;
+import br.com.aprendeai.service.ArquivoService;
 import br.com.aprendeai.service.ChamadaService;
+
+import org.springframework.core.io.Resource;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
@@ -11,12 +17,14 @@ import java.util.List;
 public class ChamadaController {
 
     private final ChamadaService chamadaService;
+    private final ArquivoService arquivoService;
 
-    public ChamadaController(ChamadaService chamadaService) {
-        this.chamadaService = chamadaService;
-    }
+    public ChamadaController(ChamadaService chamadaService, ArquivoService arquivoService) {
+		this.chamadaService = chamadaService;
+		this.arquivoService = arquivoService;
+	}
 
-    /**
+	/**
      * Inicializa a chamada do dia.
      * Pré-preenche todas as presenças com as horas máximas do dia.
      * POST /api/chamada/inicializar
@@ -62,4 +70,18 @@ public class ChamadaController {
     public List<FrequenciaAlunoDTO> buscarFrequenciaPorNome(@RequestParam String nome) {
         return chamadaService.buscarFrequenciaPorNome(nome);
     }
+    
+    @GetMapping("/relatorio/{turmaId}")
+    public ResponseEntity<Resource> gerarEbaixar(@PathVariable Long turmaId) {
+
+        Arquivo arquivo = arquivoService.gerarRelatorioFrequencia(turmaId);
+
+        Resource recurso = arquivoService.downloadArquivo(arquivo.getId());
+
+        return ResponseEntity.ok()
+                .header("Content-Disposition", "attachment; filename=" + arquivo.getNomeArquivo())
+                .contentType(MediaType.APPLICATION_PDF)
+                .body(recurso);
+    }
+
 }

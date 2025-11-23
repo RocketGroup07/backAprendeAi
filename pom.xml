@@ -118,7 +118,12 @@
   			<artifactId>java-dotenv</artifactId>
   			<version>5.2.2</version>
 		</dependency>
-
+		
+		<dependency>
+    		<groupId>com.itextpdf</groupId>
+    		<artifactId>html2pdf</artifactId>
+    		<version>4.0.4</version>
+		</dependency>
 	</dependencies>
 
 	<build>

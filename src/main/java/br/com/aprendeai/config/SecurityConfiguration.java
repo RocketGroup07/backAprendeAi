@@ -33,7 +33,8 @@ public class SecurityConfiguration {
 			"/atividades/**",
 			"/comentarios/**",
 			"/api/arquivos/**",
-			"/api/**"
+			"/api/**",
+			"/entregas/**"
 	};
 	
 	private static final String[] PERMIT_URLS = {
