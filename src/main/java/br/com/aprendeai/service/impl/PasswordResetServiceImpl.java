@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.thymeleaf.context.Context;
 
 import br.com.aprendeai.dtos.RedefinirSenhaDto;
 import br.com.aprendeai.model.PasswordResetToken;
@@ -52,9 +53,20 @@ public class PasswordResetServiceImpl implements RedefinicaoSenha {
         tokenRepository.save(token);
 
         String subject = "Código de Redefinição de Senha";
-        String content = "Seu código é: " + otp + ". Ele expira em " + EXPIRATION_MINUTES + " minutos.";
+//        String content = "Seu código é: " + otp + ". Ele expira em " + EXPIRATION_MINUTES + " minutos.";
+//
+//        emailService.sendEmail(user.getLogin(), subject, content);
+        
+        Context context = new Context();
+        context.setVariable("codigo", otp);
+        context.setVariable("minutos", EXPIRATION_MINUTES);
 
-        emailService.sendEmail(user.getLogin(), subject, content);
+        emailService.sendHtmlEmail(
+            user.getLogin(),
+            subject,
+            "email/password-reset",
+            context
+        );
     }
 
     @Override

@@ -6,6 +6,9 @@ import br.com.aprendeai.enums.StatusAtividade;
 
 public record EntregaAtividadeResponseDto(
 			Long id,
+			Long atividadeId,
+			Long alunoId,
+			String alunoNome,
 			String titulo,
 			boolean entregue,
 			String respostaTexto,

@@ -2,6 +2,7 @@ package br.com.aprendeai.model;
 
 import br.com.aprendeai.enums.ArquivoTipo;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -20,7 +21,7 @@ public class Arquivo {
     private String tipoArquivo;
     private String caminhoArquivo; 
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "atividade_id")
     private Atividade atividade;
     
@@ -32,7 +33,7 @@ public class Arquivo {
     @JoinColumn(name = "usuario_id")
     private Usuario enviadoPor;
     
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "entrega_atividade_id")
     private EntregaAtividade entregaAtividade;
     

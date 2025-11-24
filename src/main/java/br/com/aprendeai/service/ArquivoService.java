@@ -18,4 +18,6 @@ public interface ArquivoService {
 	public void deletarArquivo(Long id);
 
 	public Resource downloadArquivo(Long id);
+	
+	Arquivo gerarRelatorioFrequencia(Long turmaId);
 }
