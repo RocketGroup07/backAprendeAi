@@ -82,17 +82,19 @@ public class ComentarioServiceImpl implements ComentarioService{
 	@Override
 	@Transactional
 	public void deletarComentario(Long comentarioId) {
-		Usuario usuario = accessControlService.getUsuarioLogado();
-    	
-    	Comentario comentario = comentarioRepo.findById(comentarioId)
-    			.orElseThrow(() -> new RuntimeException("Post não encontrado."));
-    	
-    	if(usuario != comentario.getUsuario() || usuario == comentario.getPost().getTurma().getProfessor()) {
-    		throw new IllegalArgumentException("Apenas o autor do comentário ou o professor da turma pode apagá-lo.");
-    	}
-    	
-        comentarioRepo.deleteById(comentarioId);
-		
+	    Usuario usuario = accessControlService.getUsuarioLogado();
+	    
+	    Comentario comentario = comentarioRepo.findById(comentarioId)
+	            .orElseThrow(() -> new RuntimeException("Comentário não encontrado.")); 
+
+	    Usuario autor = comentario.getUsuario();
+	    Usuario professor = comentario.getPost().getTurma().getProfessor();
+	    
+	    if (!usuario.equals(autor) && !usuario.equals(professor)) {
+	        throw new IllegalArgumentException("Apenas o autor do comentário ou o professor da turma pode apagá-lo.");
+	    }
+
+	    comentarioRepo.deleteById(comentarioId);
 	}
 
 }
