@@ -72,16 +72,14 @@ public class ChamadaController {
     }
     
     @GetMapping("/relatorio/{turmaId}")
-    public ResponseEntity<Resource> gerarEbaixar(@PathVariable Long turmaId) {
+    public ResponseEntity<byte[]> gerarEbaixar(@PathVariable Long turmaId) {
 
-        Arquivo arquivo = arquivoService.gerarRelatorioFrequencia(turmaId);
-
-        Resource recurso = arquivoService.downloadArquivo(arquivo.getId());
+        byte[] arquivo = arquivoService.gerarRelatorioFrequencia(turmaId);
 
         return ResponseEntity.ok()
-                .header("Content-Disposition", "attachment; filename=" + arquivo.getNomeArquivo())
+                .header("Content-Disposition", "attachment; filename=elatorioFrequencia.pdf")
                 .contentType(MediaType.APPLICATION_PDF)
-                .body(recurso);
+                .body(arquivo);
     }
 
 }
