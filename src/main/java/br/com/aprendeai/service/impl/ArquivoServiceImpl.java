@@ -13,7 +13,10 @@ import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+import org.thymeleaf.TemplateEngine;
+import org.thymeleaf.context.Context;
 
+import com.itextpdf.html2pdf.ConverterProperties;
 import com.itextpdf.io.source.ByteArrayOutputStream;
 
 import br.com.aprendeai.config.AccessControlService;
@@ -35,13 +38,15 @@ public class ArquivoServiceImpl implements ArquivoService {
     private final ChamadaService chamadaService;
     private final TurmaRepository turmaRepository;
     private final AccessControlService accessControl;
+    private final TemplateEngine templateEngine;
 
 	public ArquivoServiceImpl(ArquivoRepository arquivoRepository, ChamadaService chamadaService,
-			TurmaRepository turmaRepository, AccessControlService accessControl) {
+			TurmaRepository turmaRepository, AccessControlService accessControl, TemplateEngine templateEngine) {
 		this.arquivoRepository = arquivoRepository;
 		this.chamadaService = chamadaService;
 		this.turmaRepository = turmaRepository;
 		this.accessControl = accessControl;
+		this.templateEngine = templateEngine;
 	}
 
 	@Override
@@ -114,7 +119,9 @@ public class ArquivoServiceImpl implements ArquivoService {
     }
     
     @Override
-    public Arquivo gerarRelatorioFrequencia(Long turmaId) {
+    public byte[] gerarRelatorioFrequencia(Long turmaId) {
+    		Context context = new Context();
+    		
             var lista = chamadaService.calcularFrequenciaTurma(turmaId);
             
             Optional<Turma> turma = turmaRepository.findById(turmaId);
@@ -122,86 +129,88 @@ public class ArquivoServiceImpl implements ArquivoService {
             Turma turmaExiste = turma.get();
             
             accessControl.verificarAcessoProfessor(turmaExiste);
+            
+            context.setVariable("turmaNome", turmaExiste.getNome());
+            context.setVariable("alunos", lista);
 
-            String turmaNome = turmaRepository.findById(turmaId)
-                    .map(t -> t.getNome())
-                    .orElse("Turma");
+            String html = templateEngine.process("relatorio", context);
+            
+            ConverterProperties properties = new ConverterProperties();
 
-            String html = gerarHtmlRelatorio(turmaNome, lista);
+            properties.setBaseUri("src/main/resources/static/");
 
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
-            com.itextpdf.html2pdf.HtmlConverter.convertToPdf(html, baos);
+            com.itextpdf.html2pdf.HtmlConverter.convertToPdf(html, baos, properties);
 
-            String nomeUnico = UUID.randomUUID() + ".pdf";
-            Path caminhoDestino = Paths.get(uploadDir).resolve(nomeUnico);
-
-            try {
-				Files.createDirectories(caminhoDestino.getParent());
-				Files.write(caminhoDestino, baos.toByteArray());
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-
-            Arquivo novoArquivo = new Arquivo();
-            novoArquivo.setNomeArquivo("relatorio-frequencia.pdf");
-            novoArquivo.setTipoArquivo("application/pdf");
-            novoArquivo.setCaminhoArquivo(caminhoDestino.toString());
-
-            return arquivoRepository.save(novoArquivo);
+            return baos.toByteArray();
     }
     
-    private String gerarHtmlRelatorio(String turmaNome, List<FrequenciaDTO> lista) {
-        String linhas = gerarLinhas(lista);
-
-        String template = """
-                <!DOCTYPE html>
-                <html>
-                <head>
-                    <meta charset="UTF-8"/>
-                    <style>
-                        body { font-family: Arial, sans-serif; padding: 20px; }
-                        h1 { text-align: center; }
-                        table { width: 100%; border-collapse: collapse; margin-top: 25px; }
-                        table, th, td { border: 1px solid #666; }
-                        th { background: #eee; padding: 8px; text-align: center; }
-                        td { padding: 6px; text-align: center; }
-                    </style>
-                </head>
-                <body>
-                <h1>Relatório de Frequência - Turma {{turmaNome}}</h1>
-                <table>
-                    <thead>
-                    <tr>
-                        <th>Aluno</th>
-                        <th>Horas Presentes</th>
-                        <th>Carga Total</th>
-                        <th>% Presença</th>
-                        <th>% Faltas</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                        {{linhasTabela}}
-                    </tbody>
-                </table>
-                </body>
-                </html>
-                """;
-
-        return template.replace("{{turmaNome}}", turmaNome)
-                       .replace("{{linhasTabela}}", linhas);
-    }
-
-    private String gerarLinhas(List<FrequenciaDTO> lista) {
-        StringBuilder sb = new StringBuilder();
-        for (FrequenciaDTO f : lista) {
-            sb.append("<tr>")
-              .append("<td>").append(f.nomeAluno()).append("</td>")
-              .append("<td>").append(f.horasPresenteTotal()).append("</td>")
-              .append("<td>").append(f.cargaHorariaTotal()).append("</td>")
-              .append("<td>").append(String.format("%.2f%%", f.percentualPresenca())).append("</td>")
-              .append("<td>").append(String.format("%.2f%%", 100 - f.percentualPresenca())).append("</td>")
-              .append("</tr>");
-        }
-        return sb.toString();
-    }
+//    private String gerarHtmlRelatorio(String turmaNome, List<FrequenciaDTO> lista) {
+//    	
+//        String linhas = gerarLinhas(lista);
+//
+//        String template = """
+//                <!DOCTYPE html>
+//                <html>
+//                <head>
+//                    <meta charset="UTF-8"/>
+//                    <style>
+//                    @font-face {
+//        				font-family: 'Neulis-Sans';
+//        				src: url('./fonts/Montserrat/static/Montserrat-Black.ttf') format('truetype');
+//        				font-weight: normal;
+//        				font-style: normal;
+//        				}
+//
+//						@font-face {
+//						    font-family: 'Neulis-Sans';
+//						    src: url('./fonts/Montserrat/static/Montserrat-Bold.ttf') format('truetype');
+//						    font-weight: bold;
+//						    font-style: normal;
+//						}
+//                        body { font-family: 'Neulis-San', sans-serif; padding: 20px; }
+//                        h1 { text-align: center; }
+//                        table { width: 100%; border-collapse: collapse; margin-top: 25px; }
+//                        table, th, td { border: 1px solid #666; }
+//                        th { background: #eee; padding: 8px; text-align: center; }
+//                        td { padding: 6px; text-align: center; }
+//                    </style>
+//                </head>
+//                <body>
+//                <h1>Relatório de Frequência - Turma {{turmaNome}}</h1>
+//                <table>
+//                    <thead>
+//                    <tr>
+//                        <th>Aluno</th>
+//                        <th>Horas Presentes</th>
+//                        <th>Carga Total</th>
+//                        <th>% Presença</th>
+//                        <th>% Faltas</th>
+//                    </tr>
+//                    </thead>
+//                    <tbody>
+//                        {{linhasTabela}}
+//                    </tbody>
+//                </table>
+//                </body>
+//                </html>
+//                """;
+//
+//        return template.replace("{{turmaNome}}", turmaNome)
+//                       .replace("{{linhasTabela}}", linhas);
+//    }
+//
+//    private String gerarLinhas(List<FrequenciaDTO> lista) {
+//        StringBuilder sb = new StringBuilder();
+//        for (FrequenciaDTO f : lista) {
+//            sb.append("<tr>")
+//              .append("<td>").append(f.nomeAluno()).append("</td>")
+//              .append("<td>").append(f.horasPresenteTotal()).append("</td>")
+//              .append("<td>").append(f.cargaHorariaTotal()).append("</td>")
+//              .append("<td>").append(String.format("%.2f%%", f.percentualPresenca())).append("</td>")
+//              .append("<td>").append(String.format("%.2f%%", 100 - f.percentualPresenca())).append("</td>")
+//              .append("</tr>");
+//        }
+//        return sb.toString();
+//    }
 }

@@ -19,5 +19,5 @@ public interface ArquivoService {
 
 	public Resource downloadArquivo(Long id);
 	
-	Arquivo gerarRelatorioFrequencia(Long turmaId);
+	byte[] gerarRelatorioFrequencia(Long turmaId);
 }
