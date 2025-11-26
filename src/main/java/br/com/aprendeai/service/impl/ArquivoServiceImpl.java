@@ -4,6 +4,8 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -131,7 +133,12 @@ public class ArquivoServiceImpl implements ArquivoService {
             accessControl.verificarAcessoProfessor(turmaExiste);
             
             context.setVariable("turmaNome", turmaExiste.getNome());
+            context.setVariable("professorNome", turmaExiste.getProfessor().getNome());
             context.setVariable("alunos", lista);
+            
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
+            String dataHoraGeracao = LocalDateTime.now().format(formatter);
+            context.setVariable("dataHoraGeracao", dataHoraGeracao);
 
             String html = templateEngine.process("relatorio", context);
             

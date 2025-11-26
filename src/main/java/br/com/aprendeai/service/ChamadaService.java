@@ -8,6 +8,7 @@ import jakarta.persistence.EntityNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -110,7 +111,28 @@ public class ChamadaService {
     }
 
     // Calcula a frequência de todos os alunos de uma turma
+//    public List<FrequenciaDTO> calcularFrequenciaTurma(Long turmaId) {
+//        Turma turma = turmaRepository.findById(turmaId)
+//                .orElseThrow(() -> new EntityNotFoundException("Turma não encontrada"));
+//
+//        int cargaHorariaTotal = turma.getCargaHorariaTotal();
+//
+//        return turma.getAlunos().stream()
+//                .map(aluno -> {
+//                    int horasPresente = presencaRepository.findByAlunoIdAndTurmaId(aluno.getId(), turmaId)
+//                            .stream()
+//                            .mapToInt(Presenca::getHorasPresente)
+//                            .sum();
+//
+//                    double percentual = (cargaHorariaTotal > 0) ? (horasPresente * 100.0 / cargaHorariaTotal) : 0.0;
+//
+//                    return new FrequenciaDTO(aluno.getId(), aluno.getNome(), horasPresente, cargaHorariaTotal, percentual);
+//                })
+//                .toList();
+//    }
+    
     public List<FrequenciaDTO> calcularFrequenciaTurma(Long turmaId) {
+
         Turma turma = turmaRepository.findById(turmaId)
                 .orElseThrow(() -> new EntityNotFoundException("Turma não encontrada"));
 
@@ -118,17 +140,28 @@ public class ChamadaService {
 
         return turma.getAlunos().stream()
                 .map(aluno -> {
+
                     int horasPresente = presencaRepository.findByAlunoIdAndTurmaId(aluno.getId(), turmaId)
                             .stream()
                             .mapToInt(Presenca::getHorasPresente)
                             .sum();
-
-                    double percentual = (cargaHorariaTotal > 0) ? (horasPresente * 100.0 / cargaHorariaTotal) : 0.0;
-
-                    return new FrequenciaDTO(aluno.getId(), aluno.getNome(), horasPresente, cargaHorariaTotal, percentual);
+                    
+                    double percentual = (cargaHorariaTotal > 0)
+                            ? (horasPresente * 100.0 / cargaHorariaTotal)
+                            : 0.0;
+                    
+                    return new FrequenciaDTO(
+                            aluno.getId(),
+                            aluno.getNome(),
+                            horasPresente,
+                            cargaHorariaTotal,
+                            percentual
+                    );
                 })
+                .sorted(Comparator.comparing(FrequenciaDTO::nomeAluno))
                 .toList();
     }
+
 
     // Busca aluno por nome e calcula presença/falta com base na carga horária da turma
     public List<FrequenciaAlunoDTO> buscarFrequenciaPorNome(String nomeAluno) {
