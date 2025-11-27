@@ -52,9 +52,17 @@ public class FavoritoController {
         return ResponseEntity.ok(favoritoService.listarAtividadesFavs());
     }
     
-    @DeleteMapping("/remover/{favoritoId}")
-    public ResponseEntity<?> removerFavorito(@PathVariable Long favoritoId) {
-    	favoritoService.removerFavorito(favoritoId);
+    @DeleteMapping("/remover/{postId}")
+    public ResponseEntity<?> removerPostFavorito(@PathVariable Long postId) {
+    	favoritoService.removerFavoritoPost(postId);
     	return ResponseEntity.noContent().build();
     }
+    
+    @DeleteMapping("/remover/{atividadeId}")
+    public ResponseEntity<?> removerAtividadeFavorita(@PathVariable Long atividadeId) {
+    	favoritoService.removerFavoritoAtividade(atividadeId);
+    	return ResponseEntity.noContent().build();
+    }
+    
+    
 }

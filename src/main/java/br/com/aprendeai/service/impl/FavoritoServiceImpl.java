@@ -74,13 +74,31 @@ public class FavoritoServiceImpl implements FavoritoService{
                 .toList();
 	}
 
-	@Override
+//	@Override
+//	@Transactional
+//	public void removerFavorito(Long favoritoId) {
+//		favoritoRepo.findById(favoritoId)
+//		.orElseThrow(() -> new RuntimeException("Favorito não encontrado"));
+//
+//		favoritoRepo.deleteById(favoritoId);
+//	}
+	
 	@Transactional
-	public void removerFavorito(Long favoritoId) {
-		favoritoRepo.findById(favoritoId)
-		.orElseThrow(() -> new RuntimeException("Favorito não encontrado"));
-
-		favoritoRepo.deleteById(favoritoId);
+	@Override
+	public void removerFavoritoPost(Long postId) {
+		Usuario usuario = accessControl.getUsuarioLogado();
+		
+		Favorito favorito = favoritoRepo.findByPostAndUsuarioId(postId, usuario.getId());
+		favoritoRepo.delete(favorito);
+	}
+	
+	@Transactional
+	@Override
+	public void removerFavoritoAtividade(Long atividadeId) {
+		Usuario usuario = accessControl.getUsuarioLogado();
+		
+		Favorito favorito = favoritoRepo.findByAtividadeAndUsuarioId(atividadeId, usuario.getId());
+		favoritoRepo.delete(favorito);
 	}
 
 	@Override

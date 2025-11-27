@@ -12,12 +12,14 @@ public interface FavoritoService {
 	
 	public List<PostResponseDto> listarFavoritos();
 	
-	public void removerFavorito(Long favoritoId);
-	
 	public AtividadeResponseDto favoritarAtv(Long atividadeId);
 	
 	public List<AtividadeResponseDto> listarAtividadesFavs();
 
 	public FavoritosResponseDto listarTodosFavoritos();
+
+	void removerFavoritoPost(Long postId);
+
+	void removerFavoritoAtividade(Long atividadeId);
 
 }
