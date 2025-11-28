@@ -109,7 +109,7 @@ public class FavoritoServiceImpl implements FavoritoService{
         Atividade atividade = atividadeRepo.findById(atividadeId).orElseThrow();
 
         boolean jaFavoritado = favoritoRepo.findByUsuario(usuario).stream()
-                .anyMatch(f -> f.getAtividade().getId().equals(atividadeId));
+                .anyMatch(f -> f.getAtividade() != null && f.getAtividade().getId().equals(atividadeId));
         if (jaFavoritado) {
             return atividadeMapper.toResponseDTO(atividade);
         }
