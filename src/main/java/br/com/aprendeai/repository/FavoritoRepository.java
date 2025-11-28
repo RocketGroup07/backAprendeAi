@@ -12,9 +12,11 @@ public interface FavoritoRepository extends JpaRepository<Favorito, Long>{
 	List<Favorito> findByUsuario(Usuario usuario);
 
 	Favorito findByPostId(Long postId);
+	
+	List<Favorito> findByUsuarioAndPostIsNotNull(Usuario usuario);
 
-	Favorito findByPostAndUsuarioId(Long postId, Long id);
+	Favorito findByPostIdAndUsuarioId(Long postId, Long usuarioId);
 
-	Favorito findByAtividadeAndUsuarioId(Long atividadeId, Long id);
+	Favorito findByAtividadeIdAndUsuarioId(Long atividadeId, Long usuarioId);
 
 }

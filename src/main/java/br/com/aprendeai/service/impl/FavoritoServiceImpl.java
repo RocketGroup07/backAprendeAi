@@ -49,7 +49,7 @@ public class FavoritoServiceImpl implements FavoritoService{
         Post post = postRepo.findById(postId).orElseThrow();
 
         boolean jaFavoritado = favoritoRepo.findByUsuario(usuario).stream()
-                .anyMatch(f -> f.getPost().getId().equals(postId));
+                .anyMatch(f -> f.getPost() != null && f.getPost().getId().equals(postId));
         if (jaFavoritado) {
             return postMapper.toResponseDto(post);
         }
@@ -67,8 +67,8 @@ public class FavoritoServiceImpl implements FavoritoService{
 	@Transactional
 	public List<PostResponseDto> listarFavoritos() {
 		Usuario usuario = accessControl.getUsuarioLogado();
-        List<Favorito> favoritos = favoritoRepo.findByUsuario(usuario);
-
+        List<Favorito> favoritos = favoritoRepo.findByUsuarioAndPostIsNotNull(usuario);
+        
         return favoritos.stream()
                 .map(fav -> postMapper.toResponseDto(fav.getPost()))
                 .toList();
@@ -88,7 +88,7 @@ public class FavoritoServiceImpl implements FavoritoService{
 	public void removerFavoritoPost(Long postId) {
 		Usuario usuario = accessControl.getUsuarioLogado();
 		
-		Favorito favorito = favoritoRepo.findByPostAndUsuarioId(postId, usuario.getId());
+		Favorito favorito = favoritoRepo.findByPostIdAndUsuarioId(postId, usuario.getId());
 		favoritoRepo.delete(favorito);
 	}
 	
@@ -97,7 +97,7 @@ public class FavoritoServiceImpl implements FavoritoService{
 	public void removerFavoritoAtividade(Long atividadeId) {
 		Usuario usuario = accessControl.getUsuarioLogado();
 		
-		Favorito favorito = favoritoRepo.findByAtividadeAndUsuarioId(atividadeId, usuario.getId());
+		Favorito favorito = favoritoRepo.findByAtividadeIdAndUsuarioId(atividadeId, usuario.getId());
 		favoritoRepo.delete(favorito);
 	}
 
