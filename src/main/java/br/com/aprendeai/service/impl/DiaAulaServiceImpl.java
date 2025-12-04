@@ -44,7 +44,7 @@ public class DiaAulaServiceImpl implements DiaAulaService {
         
         DiaAula diaAula = diaAulaRepository.findByTurmaIdAndDataAula(dto.turmaId(), dto.dataAula())
         	    .orElseGet(() -> {
-        	        DiaAula novoDia = new DiaAula(dto.dataAula(), dto.conteudo(), dto.horasMaximas(), dto.horasMaximas(), turma);
+        	        DiaAula novoDia = new DiaAula(dto.dataAula(), dto.conteudo(), dto.horasMaximas(), dto.horasTotais(), turma);
         	        DiaAula salvo = diaAulaRepository.save(novoDia);
         	        System.out.println("DiaAula salvo com ID: " + salvo.getId());
         	        return salvo;
