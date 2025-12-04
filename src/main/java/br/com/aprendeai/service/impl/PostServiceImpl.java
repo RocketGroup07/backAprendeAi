@@ -181,10 +181,12 @@ public class PostServiceImpl implements PostService{
 	    Post postParaDeletar = postExiste.get();
         
         Usuario usuarioLogado = accessControlService.getUsuarioLogado();
+        
+        boolean isProfessor = postParaDeletar.getTurma().getProfessor().getId().equals(usuarioLogado.getId());
 
         boolean isAutor = postParaDeletar.getAutor().getId().equals(usuarioLogado.getId());
         
-        if (!isAutor) {
+        if (!isAutor || !isProfessor) {
             throw new SecurityException("Apenas o professor da turma ou o autor do post podem deletá-lo.");
         }
 

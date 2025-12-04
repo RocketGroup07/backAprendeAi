@@ -85,7 +85,7 @@ public class EntregaController {
     	return ResponseEntity.noContent().build();
     }
     
-    @PutMapping("/{atividadeId}/corrigir")
+    @PutMapping("/{atividadeId}/corrigir/{alunoId}")
     public ResponseEntity<?> corrigirAtividade(@PathVariable("atividadeId") Long atividadeId, @PathVariable("alunoId") Long alunoId, @RequestBody RequestNotaDto dto){
     	return ResponseEntity.ok(entregaService.corrigirAtividade(atividadeId, alunoId, dto));
     }
