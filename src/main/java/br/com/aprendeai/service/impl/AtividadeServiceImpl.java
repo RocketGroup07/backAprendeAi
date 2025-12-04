@@ -8,7 +8,6 @@ import br.com.aprendeai.enums.ArquivoTipo;
 import br.com.aprendeai.mappers.AtividadeMapper;
 import br.com.aprendeai.model.Arquivo;
 import br.com.aprendeai.model.Atividade;
-import br.com.aprendeai.model.EntregaAtividade;
 import br.com.aprendeai.model.Turma;
 import br.com.aprendeai.model.Usuario;
 import br.com.aprendeai.repository.AtividadeRepository;
@@ -56,6 +55,10 @@ public class AtividadeServiceImpl implements AtividadeService {
     public AtividadeResponseDto criarAtividade(Long turmaId, String Atividade, MultipartFile arquivo) {
         try {
             AtividadeCreateDto dto = objectMapper.readValue(Atividade, AtividadeCreateDto.class);
+            
+            if(dto.getDataEntrega().isBefore(LocalDateTime.now())){
+            	throw new IllegalArgumentException("Não é possivel colocar a data de entrega para antes da criação da atividade.");
+            }
 
             Turma turma = buscarTurmaId(turmaId);
             accessControlService.verificarAcessoProfessor(turma);
@@ -65,6 +68,7 @@ public class AtividadeServiceImpl implements AtividadeService {
             Atividade atividade = atividadeMapper.toEntityFromCreateDto(dto);
             atividade.setProfessor(professor);
             atividade.setDataAtividade(LocalDateTime.now());
+            atividade.setDataEntrega(dto.getDataEntrega());
             atividade.setTurma(turma);
 
             if (arquivo != null && !arquivo.isEmpty()) {

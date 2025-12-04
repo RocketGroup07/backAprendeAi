@@ -37,8 +37,8 @@ public class ChamadaService {
         
         accessControl.verificarAcessoProfessor(turma);
 
-        if (dto.horasMaximas() <= 0) {
-            throw new IllegalArgumentException("Horas máximas devem ser maiores que zero");
+        if (dto.horasMaximas() <= 0 || dto.horasMaximas() > turma.getCargaHorariaTotal()) {
+            throw new IllegalArgumentException("Horas máximas devem ser maiores que zero e não devem ultrapassar a carga horária total");
         }
 
         // Busca dia de aula existente ou cria novo corretamente

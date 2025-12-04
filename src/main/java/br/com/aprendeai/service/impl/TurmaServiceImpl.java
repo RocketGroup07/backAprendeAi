@@ -55,6 +55,10 @@ public class TurmaServiceImpl implements TurmaService{
 			throw new AccessDeniedException("Apenas usuários ADMIN podem criar turmas.");
 		}
 		
+		if(dto.limiteAlunos() <= 0 || dto.limiteAlunos() > 30) {
+			throw new IllegalArgumentException("A quantidade alunos deve ser maior que 0 e menor que 30.");
+		}
+		
         Turma turma = turmaMapper.toEntityFromCreateDto(dto);
         turma.setProfessor(professorAutenticado);
         turma.setCodigo(gerarCodigoUnico());

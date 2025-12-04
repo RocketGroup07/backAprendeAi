@@ -33,7 +33,7 @@ public class Turma {
     @OneToMany(mappedBy = "turma", cascade = CascadeType.REMOVE)
     private List<Atividade> atividades;
 
-    @ManyToMany(cascade = CascadeType.REMOVE)
+    @ManyToMany
     @JoinTable(
             name = "turma_alunos",
             joinColumns = @JoinColumn(name = "turma_id"),
