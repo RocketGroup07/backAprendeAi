@@ -55,7 +55,7 @@ public class TurmaServiceImpl implements TurmaService{
 			throw new AccessDeniedException("Apenas usuários ADMIN podem criar turmas.");
 		}
 		
-		if(dto.limiteAlunos() <= 0 || dto.limiteAlunos() >= 40) {
+		if(dto.limiteAlunos() <= 0 || dto.limiteAlunos() > 40) {
 			throw new IllegalArgumentException("A quantidade alunos deve ser maior que 0 e menor ou igual a 40.");
 		}
 		
