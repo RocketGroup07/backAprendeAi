@@ -142,11 +142,11 @@ public class AtividadeServiceImpl implements AtividadeService {
     @Override
     @Transactional
     public void deletarAtividade(Long id) {
-        if (!atividadeRepository.existsById(id)) {
-            throw new EntityNotFoundException("Atividade não encontrada.");
-        }
+    	
+    	Atividade atividade = buscarAtividadeId(id);
+    	
+    	accessControlService.verificarAcessoProfessor(atividade.getTurma());
         
-//        entregaAtividadeRepo.deleteByAtividade(id);
         atividadeRepository.deleteById(id);
     }
 
