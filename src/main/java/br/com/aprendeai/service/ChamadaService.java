@@ -36,9 +36,22 @@ public class ChamadaService {
                 .orElseThrow(() -> new EntityNotFoundException("Turma não encontrada"));
         
         accessControl.verificarAcessoProfessor(turma);
+        
+        int horasTotaisJaRegistradas = diaAulaRepository.findByTurmaId(turma.getId()).stream()
+                .filter(dia -> !dia.getDataAula().equals(dto.dataAula()))
+                .mapToInt(DiaAula::getHorasMaximas)
+                .sum();
+        
+        int cargaHorariaTotal = turma.getCargaHorariaTotal();
+        int horasAposAdicao = horasTotaisJaRegistradas + dto.horasMaximas();
 
-        if (dto.horasMaximas() <= 0 || dto.horasMaximas() > turma.getCargaHorariaTotal()) {
-            throw new IllegalArgumentException("Horas máximas devem ser maiores que zero e não devem ultrapassar a carga horária total");
+        if (horasAposAdicao > cargaHorariaTotal) {
+            int horasRestantes = cargaHorariaTotal - horasTotaisJaRegistradas;
+            String mensagem = String.format(
+                "A adição de %d horas ultrapassa a carga horária total da turma (%d horas). Você só pode adicionar no máximo mais %d horas.",
+                dto.horasMaximas(), cargaHorariaTotal, horasRestantes
+            );
+            throw new IllegalArgumentException(mensagem);
         }
 
         // Busca dia de aula existente ou cria novo corretamente
@@ -85,6 +98,9 @@ public class ChamadaService {
         Presenca presenca = presencaRepository.findById(presencaId)
                 .orElseThrow(() -> new EntityNotFoundException("Presença não encontrada"));
 
+        Turma turma = presenca.getDiaAula().getTurma();
+        accessControl.verificarAcessoProfessor(turma);
+        
         int horasMax = presenca.getDiaAula().getHorasMaximas();
         if (horasPresente < 0 || horasPresente > horasMax) {
             throw new IllegalArgumentException("Horas presente deve estar entre 0 e " + horasMax);
