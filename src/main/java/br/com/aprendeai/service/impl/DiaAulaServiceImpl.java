@@ -7,7 +7,6 @@ import java.util.List;
 import br.com.aprendeai.dtos.DiaAulaCreateDTO;
 import br.com.aprendeai.dtos.DiaAulaResponseDTO;
 import br.com.aprendeai.mappers.DiaAulaMapper;
-import br.com.aprendeai.mappers.TurmaMapper;
 import br.com.aprendeai.model.DiaAula;
 import br.com.aprendeai.model.Turma;
 import br.com.aprendeai.repository.DiaAulaRepository;
@@ -20,14 +19,12 @@ public class DiaAulaServiceImpl implements DiaAulaService {
     private final DiaAulaRepository diaAulaRepository;
     private final TurmaRepository turmaRepository;
     private final DiaAulaMapper diaAulaMapper;
-    private final TurmaMapper turmaMapper;
 
     public DiaAulaServiceImpl(DiaAulaRepository diaAulaRepository, TurmaRepository turmaRepository,
-			DiaAulaMapper diaAulaMapper, TurmaMapper turmaMapper) {
+			DiaAulaMapper diaAulaMapper) {
 		this.diaAulaRepository = diaAulaRepository;
 		this.turmaRepository = turmaRepository;
 		this.diaAulaMapper = diaAulaMapper;
-		this.turmaMapper = turmaMapper;
 	}
 
 	@Override
@@ -36,8 +33,8 @@ public class DiaAulaServiceImpl implements DiaAulaService {
         Turma turma = turmaRepository.findById(dto.turmaId())
                 .orElseThrow(() -> new RuntimeException("Turma não encontrada."));
 
-        if (dto.horasMaximas() <= 0) {
-            throw new IllegalArgumentException("Horas máximas devem ser maiores que zero.");
+        if (dto.horasMaximas() <= 0 || dto.horasMaximas() > 8) {
+            throw new IllegalArgumentException("Horas máximas devem ser maiores que zero e menores que 8.");
         }
 
         int cargaHorariaTotal = turma.getCargaHorariaTotal();
@@ -48,17 +45,21 @@ public class DiaAulaServiceImpl implements DiaAulaService {
                 .mapToInt(DiaAula::getHorasMaximas)
                 .sum();
         
+        int horasNovas = dto.horasMaximas();
+        int horasAntesDaAtualizacao = 0;
+        
         if (diaAulaExistente != null) {
-            horasTotaisJaRegistradas -= diaAulaExistente.getHorasMaximas();
+            horasAntesDaAtualizacao = diaAulaExistente.getHorasMaximas();
+            horasTotaisJaRegistradas -= horasAntesDaAtualizacao;
         }
 
-        int horasAposAdicao = horasTotaisJaRegistradas + dto.horasMaximas();
+        int horasAposAdicao = horasTotaisJaRegistradas + horasNovas;
 
         if (horasAposAdicao > cargaHorariaTotal) {
             int horasRestantes = cargaHorariaTotal - horasTotaisJaRegistradas;
             String mensagem = String.format(
                 "A adição de %d horas ultrapassa a carga horária total da turma (%d horas). Você só pode adicionar no máximo mais %d horas.",
-                dto.horasMaximas(), cargaHorariaTotal, horasRestantes
+                horasNovas, cargaHorariaTotal, horasRestantes
             );
             throw new IllegalArgumentException(mensagem);
         }

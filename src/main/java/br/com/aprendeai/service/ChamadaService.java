@@ -37,19 +37,32 @@ public class ChamadaService {
         
         accessControl.verificarAcessoProfessor(turma);
         
+        if (dto.horasMaximas() > 8) {
+            throw new IllegalArgumentException("Um dia de aula não pode ter mais que 8 horas.");
+        }
+        
+        DiaAula diaAulaExistente = diaAulaRepository.findByTurmaIdAndDataAula(dto.turmaId(), dto.dataAula()).orElse(null);
+        
         int horasTotaisJaRegistradas = diaAulaRepository.findByTurmaId(turma.getId()).stream()
-                .filter(dia -> !dia.getDataAula().equals(dto.dataAula()))
                 .mapToInt(DiaAula::getHorasMaximas)
                 .sum();
+                
+        int horasNovas = dto.horasMaximas();
+        int horasAntesDaAtualizacao = 0;
+        
+        if (diaAulaExistente != null) {
+            horasAntesDaAtualizacao = diaAulaExistente.getHorasMaximas();
+            horasTotaisJaRegistradas -= horasAntesDaAtualizacao;
+        }
         
         int cargaHorariaTotal = turma.getCargaHorariaTotal();
-        int horasAposAdicao = horasTotaisJaRegistradas + dto.horasMaximas();
+        int horasAposAdicao = horasTotaisJaRegistradas + horasNovas;
 
         if (horasAposAdicao > cargaHorariaTotal) {
             int horasRestantes = cargaHorariaTotal - horasTotaisJaRegistradas;
             String mensagem = String.format(
                 "A adição de %d horas ultrapassa a carga horária total da turma (%d horas). Você só pode adicionar no máximo mais %d horas.",
-                dto.horasMaximas(), cargaHorariaTotal, horasRestantes
+                horasNovas, cargaHorariaTotal, horasRestantes
             );
             throw new IllegalArgumentException(mensagem);
         }
