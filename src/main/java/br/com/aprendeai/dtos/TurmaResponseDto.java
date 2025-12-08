@@ -7,6 +7,7 @@ public record TurmaResponseDto(
 		Long id,
         String nome,
         int limiteAlunos,
+        Integer cargaHorariaTotal,
         String codigo,
         UsuarioResponseDto professor,
         Set<UsuarioResponseDto> alunos,
