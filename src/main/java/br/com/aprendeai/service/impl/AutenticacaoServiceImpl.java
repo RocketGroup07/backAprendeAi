@@ -7,6 +7,7 @@ import java.time.ZoneOffset;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import com.auth0.jwt.JWT;
@@ -27,6 +28,9 @@ public class AutenticacaoServiceImpl implements AutenticacaoService{
 	@Autowired
 	private UsuarioRepository usuarioRepository;
 	
+	@Autowired
+	private PasswordEncoder passwordEncoder;
+	
 	@Override
 	public UserDetails loadUserByUsername(String login) throws UsernameNotFoundException {
 		return usuarioRepository.findByLogin(login);
@@ -45,6 +49,10 @@ public class AutenticacaoServiceImpl implements AutenticacaoService{
         Usuario usuario = usuarioRepository.findByLogin(authDto.login());
         if (usuario == null) {
             throw new UsernameNotFoundException("Usuário não encontrado.");
+        }
+        
+        if (!passwordEncoder.matches(authDto.senha(), usuario.getSenha())) {
+            throw new IllegalArgumentException("Senha incorreta.");
         }
 
         String token = gerarTokenJwt(usuario);
@@ -71,20 +79,7 @@ public class AutenticacaoServiceImpl implements AutenticacaoService{
 		
 	}
 	
-	public String validaTokenJwt(String token) {
-		try {
-			Algorithm algorithm = Algorithm.HMAC256("my-secret");
-			
-			return JWT.require(algorithm)
-					.withIssuer("auth-api")
-					.build()
-					.verify(token)
-					.getSubject();
-		} catch (JWTVerificationException exception) {
-			System.out.println("Token inválido ou expirado");
-			return null;
-		}
-	}
+	
 
 	private Instant gerarDataExpiracao() {
 		return LocalDateTime.now()

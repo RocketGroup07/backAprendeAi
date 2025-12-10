@@ -18,12 +18,12 @@ import jakarta.servlet.http.HttpServletResponse;
 @Component
 public class SecurityFilter extends OncePerRequestFilter{
 
-	private final AutenticacaoService autenticacaoService;
+	private final JWTProvider jwt;
 	
 	private final UsuarioRepository usuarioRepository;
 	
-	public SecurityFilter(AutenticacaoService autenticacaoService, UsuarioRepository usuarioRepository) {
-		this.autenticacaoService = autenticacaoService;
+	public SecurityFilter(JWTProvider jwt, UsuarioRepository usuarioRepository) {
+		this.jwt = jwt;
 		this.usuarioRepository = usuarioRepository;
 	}
 
@@ -34,7 +34,7 @@ public class SecurityFilter extends OncePerRequestFilter{
 		String token = extraiTokenHeader(request);
 		
 		if(token != null) {
-				String login = autenticacaoService.validaTokenJwt(token);
+				String login = jwt.validaTokenJwt(token);
 				
 				Usuario usuario = usuarioRepository.findByLogin(login);
 				
