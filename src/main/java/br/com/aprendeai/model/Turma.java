@@ -32,6 +32,10 @@ public class Turma {
     
     @OneToMany(mappedBy = "turma", cascade = CascadeType.REMOVE)
     private List<Atividade> atividades;
+    
+    @OneToMany(mappedBy = "turma", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Post> posts;
+
 
     @ManyToMany
     @JoinTable(
