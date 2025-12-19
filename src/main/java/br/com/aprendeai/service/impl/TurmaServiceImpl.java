@@ -149,7 +149,7 @@ public class TurmaServiceImpl implements TurmaService{
 
         Turma clone = new Turma();
         clone.setNome(original.getNome() + " (Cópia)");
-        clone.setLimiteAlunos(0);
+        clone.setLimiteAlunos(original.getLimiteAlunos());
         clone.setCodigo(gerarCodigoUnico());
         clone.setCargaHorariaTotal(original.getCargaHorariaTotal());
         clone.setProfessor(original.getProfessor());

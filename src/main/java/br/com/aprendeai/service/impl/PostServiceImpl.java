@@ -118,7 +118,7 @@ public class PostServiceImpl implements PostService{
 	
 	@Override
     @Transactional
-    public Arquivo baixarAnexo(Long postId, Long turmaId) {
+    public Arquivo baixarAnexo(Long turmaId, Long postId) {
 		 	Optional<Post> postExiste = postRepo.findByIdAndTurmaId(postId, turmaId);
 
 		    if (postExiste.isEmpty()) {

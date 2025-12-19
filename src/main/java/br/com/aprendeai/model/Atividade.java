@@ -48,5 +48,8 @@ public class Atividade {
     
     @OneToMany(mappedBy = "atividade", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<EntregaAtividade> entregas;
+    
+    @OneToMany(mappedBy = "atividade", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Favorito> favoritos;
 
 }
